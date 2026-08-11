@@ -5,7 +5,7 @@ conn = sqlite3.connect('campus_transit.db')
 cursor = conn.cursor()
 
 # 2. This opens your SQL text file and reads all the blueprints
-with open('DataBase_setup.sql', 'r') as file:
+with open('DataBase.sql', 'r') as file:
     sql_script = file.read()
 
 # 3. This executes the SQL commands to build the tables and insert the GEU data
