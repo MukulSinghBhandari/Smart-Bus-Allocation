@@ -1,0 +1,134 @@
+/*
+ * styles.css
+ * -------------------------------------------------------------
+ * Custom styles layered on top of the Tailwind Play CDN.
+ * Only things Tailwind utilities can't cleanly express live here:
+ * fonts, toast/modal transitions, timeline connectors, and a few
+ * accessibility niceties.
+ * -------------------------------------------------------------
+ */
+
+:root {
+  --brand: #4f46e5; /* indigo-600 */
+  --brand-dark: #4338ca;
+}
+
+html,
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Respect users who prefer reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ---- Toasts -------------------------------------------------- */
+.toast {
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.toast.toast-visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* ---- Modal --------------------------------------------------- */
+.modal-overlay {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.modal-overlay.modal-visible {
+  opacity: 1;
+}
+.modal-card {
+  transform: translateY(16px);
+  transition: transform 0.2s ease;
+}
+.modal-visible .modal-card {
+  transform: translateY(0);
+}
+
+/* ---- Seat button press animation ----------------------------- */
+.seat-btn {
+  transition: transform 0.08s ease, background-color 0.15s ease;
+}
+.seat-btn:active {
+  transform: scale(0.94);
+}
+
+/* Brief pulse applied to the seat number when it changes. */
+@keyframes seat-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.14);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.seat-pop {
+  animation: seat-pop 0.28s ease;
+}
+
+/* ---- Route timeline connectors ------------------------------- */
+/*
+ * Each timeline item draws a vertical line beneath its marker,
+ * except the last one. Colors are set inline via utility classes
+ * on the marker; the connector inherits a neutral tone.
+ */
+.timeline-item {
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+.timeline-item:not(:last-child)::before {
+  content: "";
+  position: absolute;
+  left: 1.125rem; /* aligns with center of a 2.25rem marker */
+  top: 2.25rem;
+  bottom: 0;
+  width: 2px;
+  background-color: #e2e8f0; /* slate-200 */
+}
+.timeline-item.done:not(:last-child)::before {
+  background-color: #34d399; /* emerald-400 */
+}
+
+/* Subtle attention pulse for the current stop marker. */
+@keyframes ring-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(79, 70, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+  }
+}
+.marker-current {
+  animation: ring-pulse 2s infinite;
+}
+
+/* Focus visibility for keyboard users. */
+a:focus-visible,
+button:focus-visible,
+select:focus-visible {
+  outline: 3px solid #a5b4fc; /* indigo-300 */
+  outline-offset: 2px;
+}
