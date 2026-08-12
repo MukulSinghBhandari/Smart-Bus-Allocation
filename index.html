@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-slate-100">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#4f46e5" />
+    <meta
+      name="description"
+      content="Conductor Portal for the university Smart Bus Allocation and Transit Mapping System."
+    />
+    <title>Conductor Portal — Smart Bus Transit</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="../css/styles.css" />
+  </head>
+
+  <body class="min-h-dvh bg-slate-100 text-slate-900">
+    <main class="mx-auto flex min-h-dvh max-w-md flex-col px-5 py-8">
+      <!-- Brand -->
+      <header class="flex items-center gap-3">
+        <div
+          class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm"
+          aria-hidden="true"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>
+        </div>
+        <span class="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Smart Bus Transit
+        </span>
+      </header>
+
+      <!-- Hero -->
+      <section class="mt-16 flex flex-1 flex-col">
+        <span
+          class="inline-flex w-fit items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700"
+        >
+          <span class="h-1.5 w-1.5 rounded-full bg-indigo-600"></span>
+          Conductor Access
+        </span>
+
+        <h1 class="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-balance">
+          Conductor Portal
+        </h1>
+        <p class="mt-3 text-base leading-relaxed text-slate-600 text-pretty">
+          Manage your assigned bus, seats and route progress.
+        </p>
+
+        <!-- Assigned bus preview (populated from mock data) -->
+        <div
+          id="bus-preview"
+          class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        >
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Assigned bus
+          </p>
+          <div class="mt-2 flex items-end justify-between gap-3">
+            <div>
+              <p id="preview-busno" class="text-2xl font-extrabold text-slate-900">
+                &nbsp;
+              </p>
+              <p id="preview-reg" class="text-sm text-slate-500">&nbsp;</p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                Departs
+              </p>
+              <p id="preview-timing" class="text-lg font-bold text-indigo-600">
+                &nbsp;
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Primary action -->
+      <footer class="mt-8">
+        <a
+          href="./dashboard.html"
+          class="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-lg font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 active:scale-[0.99]"
+        >
+          Open Bus Dashboard
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+        <p class="mt-4 text-center text-xs text-slate-400">
+          No sign-in required &middot; Frontend demo
+        </p>
+      </footer>
+    </main>
+
+    <!-- Scripts: data -> api -> common -> page -->
+    <script src="../js/data.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="../js/common.js"></script>
+    <script>
+      // Populate the assigned-bus preview from the mock API.
+      (function () {
+        var res = window.ConductorAPI.getAssignedBus();
+        if (!res.ok) return;
+        var bus = res.data;
+        document.getElementById("preview-busno").textContent = "BUS " + bus.busNo;
+        document.getElementById("preview-reg").textContent = bus.registrationNo;
+        document.getElementById("preview-timing").textContent = bus.timing;
+      })();
+    </script>
+  </body>
+</html>
