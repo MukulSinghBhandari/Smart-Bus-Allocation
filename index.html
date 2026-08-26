@@ -16,7 +16,7 @@
       rel="stylesheet"
     />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="../css/styles.css" />
+    <link rel="stylesheet" href="./styles.css" />
   </head>
 
   <body class="min-h-dvh bg-slate-100 text-slate-900">
@@ -50,7 +50,7 @@
           Manage your assigned bus, seats and route progress.
         </p>
 
-        <!-- Assigned bus preview (populated from mock data) -->
+        <!-- Assigned bus preview -->
         <div
           id="bus-preview"
           class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
@@ -93,13 +93,14 @@
     </main>
 
     <!-- Scripts: data -> api -> common -> page -->
-    <script src="../js/data.js"></script>
-    <script src="../js/api.js"></script>
-    <script src="../js/common.js"></script>
+    <script src="./data.js"></script>
+    <script src="./api.js"></script>
+    <script src="./common.js"></script>
     <script>
-      // Populate the assigned-bus preview from the mock API.
-      (function () {
-        var res = window.ConductorAPI.getAssignedBus();
+      // Populate the assigned-bus preview from the real API (async now that
+      // ConductorAPI.getAssignedBus() does a real fetch()).
+      (async function () {
+        var res = await window.ConductorAPI.getAssignedBus();
         if (!res.ok) return;
         var bus = res.data;
         document.getElementById("preview-busno").textContent = "BUS " + bus.busNo;
