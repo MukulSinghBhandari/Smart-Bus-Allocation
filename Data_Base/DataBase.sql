@@ -1,21 +1,23 @@
 -- Table 1: All Unique Bus Stops in the City
 CREATE TABLE Stops (
-    stop_id INTEGER PRIMARY KEY,
-    stop_name TEXT NOT NULL
+    stop_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    stop_name TEXT NOT NULL UNIQUE
 );
 
--- Table 2: Fleet Details
+-- Table 2: Fleet Details (Updated to match the new shift structure)
 CREATE TABLE Buses (
-    bus_id INTEGER PRIMARY KEY,
+    bus_id INTEGER PRIMARY KEY AUTOINCREMENT,
     bus_number TEXT NOT NULL,
     registration_number TEXT,
-    shift_timing TEXT,
+    morning_shift_one TEXT,
+    morning_shift_two TEXT,
+    evening_shift TEXT,
     conductor_name TEXT,
     conductor_phone TEXT,
     total_capacity INTEGER DEFAULT 50
 );
 
--- Table 3: The Route Checklist
+-- Table 3: The Route Checklist (Maps the ordered sequence of stops for each bus route)
 CREATE TABLE Route_Checklist (
     checklist_id INTEGER PRIMARY KEY AUTOINCREMENT,
     bus_id INTEGER,
@@ -27,7 +29,7 @@ CREATE TABLE Route_Checklist (
 
 -- Table 4: The Live Tracker
 CREATE TABLE Live_Status (
-    status_id INTEGER PRIMARY KEY,
+    status_id INTEGER PRIMARY KEY AUTOINCREMENT,
     bus_id INTEGER,
     current_parking_zone TEXT,
     current_stop_id INTEGER,
