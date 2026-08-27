@@ -1,30 +1,44 @@
 import sqlite3
 import csv
+import os
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CSV_FILE = os.path.join(BASE_DIR, '../Data_Base/buses.csv')
+DB_FILE = os.path.join(BASE_DIR, '../campus_transit.db')
 
 # 1. Connect to the database
-conn = sqlite3.connect('campus_transit.db')
+conn = sqlite3.connect(DB_FILE)
 cursor = conn.cursor()
 
 # 2. Open the CSV file
-with open('buses.csv', 'r', encoding='utf-8') as file:
-    # Read the CSV as a dictionary
+with open(CSV_FILE, 'r', encoding='utf-8') as file:
     reader = csv.DictReader(file)
     
     for row in reader:
         bus_no = row['Bus No'].strip()
         reg_no = row['Reg No'].strip()
-        timing = row['Timing'].strip()
+        morning_one = row['Morning Shift One'].strip()
+        morning_two = row['Morning Shift Two'].strip()
+        evening = row['Evening Shift'].strip()
         conductor = row['Conductor'].strip()
         phone = row['Phone'].strip()
         route_string = row['Route'].strip()
 
-        # 3. Insert the Bus details
+        # 3. Insert the Bus details with the new shift columns
         cursor.execute('''
-            INSERT INTO Buses (bus_number, registration_number, shift_timing, conductor_name, conductor_phone) 
-            VALUES (?, ?, ?, ?, ?)
-        ''', (bus_no, reg_no, timing, conductor, phone))
+            INSERT INTO Buses (
+                bus_number, 
+                registration_number, 
+                morning_shift_one, 
+                morning_shift_two, 
+                evening_shift, 
+                conductor_name, 
+                conductor_phone
+            ) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (bus_no, reg_no, morning_one, morning_two, evening, conductor, phone))
         
-        bus_id = cursor.lastrowid # Get the ID of the bus we just inserted
+        bus_id = cursor.lastrowid # Get the ID of the bus just inserted
 
         # 4. Split the route by the hyphen '-' and remove extra spaces
         stops = [stop.strip() for stop in route_string.split('-')]
@@ -43,7 +57,7 @@ with open('buses.csv', 'r', encoding='utf-8') as file:
                 cursor.execute('INSERT INTO Stops (stop_name) VALUES (?)', (stop_name,))
                 stop_id = cursor.lastrowid
             
-            # 6. Map the Bus to the Stop with its Order (1st, 2nd, 3rd, etc.)
+            # 6. Map the Bus to the Stop with its Order
             cursor.execute('''
                 INSERT INTO Route_Checklist (bus_id, stop_id, stop_order) 
                 VALUES (?, ?, ?)
@@ -53,4 +67,4 @@ with open('buses.csv', 'r', encoding='utf-8') as file:
 conn.commit()
 conn.close()
 
-print("Successfully imported all buses and generated the routes!")
+print("Successfully imported all buses, shifts, and generated the routes!")
