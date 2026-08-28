@@ -1,0 +1,6 @@
+Parking Zone A|College Exit|2
+Parking Zone B|College Exit|2
+College Exit|Clement Town|4
+Clement Town|Rajpur Road|6
+College Exit|ISBT Dehradun|8
+Parking Zone C|College Exit|3

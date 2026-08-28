@@ -1,0 +1,3 @@
+17|12|ZoneA|Parking Zone A|College Exit|Clement Town|Rajpur Road
+22|0|ZoneB|Parking Zone B|College Exit|Clement Town|Rajpur Road
+8|5|ZoneC|Parking Zone C|College Exit|ISBT Dehradun
