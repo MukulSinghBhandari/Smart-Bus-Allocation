@@ -1,6 +1,5 @@
 // conductor.js
-// Page logic for dashboard.html. Requires data.js, api.js and common.js to
-// be loaded first.
+// Page logic for dashboard.html. 
 
 (function () {
   var bus = null;
@@ -13,7 +12,11 @@
     $("topbar-busno").textContent = "BUS " + bus.busNo;
     $("bus-title").textContent = "BUS " + bus.busNo;
     $("bus-reg").textContent = bus.registrationNo;
-    $("bus-timing-badge").textContent = bus.timing;
+    
+    // Updated to display your three shift columns nicely
+    var shiftsText = [bus.morningShiftOne, bus.morningShiftTwo, bus.eveningShift].filter(Boolean).join(" | ");
+    $("bus-timing-badge").textContent = shiftsText || "Regular Shift";
+    
     $("bus-conductor").textContent = bus.conductorName;
     $("bus-phone").textContent = bus.conductorPhone;
 
@@ -23,7 +26,7 @@
     $("trip-status-dot").className = "h-2 w-2 rounded-full " + trip.dotClass;
 
     $("stat-bus").textContent = bus.busNo;
-    $("stat-timing").textContent = bus.timing;
+    $("stat-timing").textContent = shiftsText || "Regular";
     $("stat-zone").textContent = bus.parkingZone || "\u2014";
     var currentStop = bus.route.find(function (s) { return s.stopId === bus.currentStopId; });
     $("stat-stop").textContent = currentStop ? currentStop.stopName : "\u2014";
@@ -57,7 +60,9 @@
 
   function populateZoneSelect() {
     var select = $("zone-select");
-    window.ConductorData.PARKING_ZONES.forEach(function (zone) {
+    // Fallback array if ConductorData is removed
+    var zones = (window.ConductorData && window.ConductorData.PARKING_ZONES) || ["Bus Stand", "Main Gate", "Hostel Quad", "Engineering Block"];
+    zones.forEach(function (zone) {
       var opt = document.createElement("option");
       opt.value = zone;
       opt.textContent = zone;

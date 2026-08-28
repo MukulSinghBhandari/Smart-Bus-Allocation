@@ -1,6 +1,5 @@
 // route.js
-// Page logic for route.html. Requires data.js, api.js and common.js to be
-// loaded first.
+// Page logic for route.html. 
 
 (function () {
   function $(id) { return document.getElementById(id); }
@@ -21,7 +20,10 @@
     $("r-trip-pill").className = "inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-bold " + trip.pillClass;
     $("r-trip-dot").className = "h-2 w-2 rounded-full " + trip.dotClass;
 
-    $("r-timing").textContent = bus.timing;
+    // Updated to display your three shift columns nicely
+    var shiftsText = [bus.morningShiftOne, bus.morningShiftTwo, bus.eveningShift].filter(Boolean).join(" | ");
+    $("r-timing").textContent = shiftsText || "Regular Shift";
+    
     $("r-zone").textContent = bus.parkingZone || "\u2014";
     $("r-seats").textContent = bus.availableSeats + " / " + bus.totalSeats;
 

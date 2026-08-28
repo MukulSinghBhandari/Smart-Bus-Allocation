@@ -1,3 +1,4 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en" class="bg-slate-100">
   <head>
@@ -50,13 +51,26 @@
           Manage your assigned bus, seats and route progress.
         </p>
 
-        <!-- Assigned bus preview -->
+        <!-- Bus selection dropdown -->
+        <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <label for="bus-select" class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Select Your Bus
+          </label>
+          <select
+            id="bus-select"
+            class="mt-2 w-full rounded-xl border border-slate-300 p-3 text-base font-semibold text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+          >
+            <option value="">Loading buses...</option>
+          </select>
+        </div>
+
+        <!-- Assigned bus preview card -->
         <div
           id="bus-preview"
-          class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          class="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
         >
           <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Assigned bus
+            Assigned bus preview
           </p>
           <div class="mt-2 flex items-end justify-between gap-3">
             <div>
@@ -67,9 +81,9 @@
             </div>
             <div class="text-right">
               <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Departs
+                Shifts
               </p>
-              <p id="preview-timing" class="text-lg font-bold text-indigo-600">
+              <p id="preview-timing" class="text-sm font-bold text-indigo-600">
                 &nbsp;
               </p>
             </div>
@@ -80,7 +94,8 @@
       <!-- Primary action -->
       <footer class="mt-8">
         <a
-          href="./dashboard.html"
+          id="btn-open-dashboard"
+          href="#"
           class="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-lg font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 active:scale-[0.99]"
         >
           Open Bus Dashboard
@@ -93,20 +108,45 @@
     </main>
 
     <!-- Scripts: data -> api -> common -> page -->
-    <script src="./data.js"></script>
-    <script src="./api.js"></script>
-    <script src="./common.js"></script>
+    <script src="../JavaScript/data.js"></script>
+    <script src="../JavaScript/api_engine.js"></script>
+    <script src="../JavaScript/common.js"></script>
     <script>
-      // Populate the assigned-bus preview from the real API (async now that
-      // ConductorAPI.getAssignedBus() does a real fetch()).
-      (async function () {
-        var res = await window.ConductorAPI.getAssignedBus();
-        if (!res.ok) return;
-        var bus = res.data;
-        document.getElementById("preview-busno").textContent = "BUS " + bus.busNo;
-        document.getElementById("preview-reg").textContent = bus.registrationNo;
-        document.getElementById("preview-timing").textContent = bus.timing;
-      })();
+      // Load dropdown options dynamically with array validation
+      async function loadBusDropdown() {
+        var select = document.getElementById("bus-select");
+        var res = window.ConductorAPI.getAllBuses 
+          ? await window.ConductorAPI.getAllBuses() 
+          : { ok: false, data: [] };
+
+        select.innerHTML = "";
+        
+        var buses = Array.isArray(res.data) 
+          ? res.data 
+          : (res.data && Array.isArray(res.data.data) ? res.data.data : []);
+
+        if (buses.length > 0) {
+          buses.forEach(function(bus) {
+            var opt = document.createElement("option");
+            opt.value = bus.id || bus.busNo || bus.bus_id;
+            opt.textContent = "Bus " + (bus.busNo || bus.bus_number || bus.id);
+            select.appendChild(opt);
+          });
+        } else {
+          var opt = document.createElement("option");
+          opt.value = "1";
+          opt.textContent = "Bus 1 (Fallback)";
+          select.appendChild(opt);
+        }
+      }
+
+      loadBusDropdown();
+
+      document.getElementById("btn-open-dashboard").addEventListener("click", function (e) {
+        e.preventDefault();
+        var selectedBusId = document.getElementById("bus-select").value;
+        window.location.href = "./dashboard.html?bus_id=" + selectedBusId;
+      });
     </script>
   </body>
 </html>
