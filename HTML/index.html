@@ -48,46 +48,21 @@
           Conductor Portal
         </h1>
         <p class="mt-3 text-base leading-relaxed text-slate-600 text-pretty">
-          Manage your assigned bus, seats and route progress.
+          Enter your bus number to manage your seats and route progress.
         </p>
 
-        <!-- Bus selection dropdown -->
+        <!-- Bus number text input container -->
         <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <label for="bus-select" class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Select Your Bus
+          <label for="bus-number-input" class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+            Enter Bus Number
           </label>
-          <select
-            id="bus-select"
-            class="mt-2 w-full rounded-xl border border-slate-300 p-3 text-base font-semibold text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
-          >
-            <option value="">Loading buses...</option>
-          </select>
-        </div>
-
-        <!-- Assigned bus preview card -->
-        <div
-          id="bus-preview"
-          class="mt-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-        >
-          <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Assigned bus preview
-          </p>
-          <div class="mt-2 flex items-end justify-between gap-3">
-            <div>
-              <p id="preview-busno" class="text-2xl font-extrabold text-slate-900">
-                &nbsp;
-              </p>
-              <p id="preview-reg" class="text-sm text-slate-500">&nbsp;</p>
-            </div>
-            <div class="text-right">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Shifts
-              </p>
-              <p id="preview-timing" class="text-sm font-bold text-indigo-600">
-                &nbsp;
-              </p>
-            </div>
-          </div>
+          <input
+            type="text"
+            id="bus-number-input"
+            placeholder="e.g. 1, 2, or 101"
+            class="mt-2 w-full rounded-xl border border-slate-300 p-3 text-base font-semibold text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none"
+          />
+          <p id="error-msg" class="mt-2 text-xs font-medium text-rose-600 hidden">Bus number not found in database.</p>
         </div>
       </section>
 
@@ -112,40 +87,31 @@
     <script src="../JavaScript/api_engine.js"></script>
     <script src="../JavaScript/common.js"></script>
     <script>
-      // Load dropdown options dynamically with array validation
-      async function loadBusDropdown() {
-        var select = document.getElementById("bus-select");
-        var res = window.ConductorAPI.getAllBuses 
-          ? await window.ConductorAPI.getAllBuses() 
-          : { ok: false, data: [] };
-
-        select.innerHTML = "";
-        
-        var buses = Array.isArray(res.data) 
-          ? res.data 
-          : (res.data && Array.isArray(res.data.data) ? res.data.data : []);
-
-        if (buses.length > 0) {
-          buses.forEach(function(bus) {
-            var opt = document.createElement("option");
-            opt.value = bus.id || bus.busNo || bus.bus_id;
-            opt.textContent = "Bus " + (bus.busNo || bus.bus_number || bus.id);
-            select.appendChild(opt);
-          });
-        } else {
-          var opt = document.createElement("option");
-          opt.value = "1";
-          opt.textContent = "Bus 1 (Fallback)";
-          select.appendChild(opt);
-        }
-      }
-
-      loadBusDropdown();
-
-      document.getElementById("btn-open-dashboard").addEventListener("click", function (e) {
+      document.getElementById("btn-open-dashboard").addEventListener("click", async function (e) {
         e.preventDefault();
-        var selectedBusId = document.getElementById("bus-select").value;
-        window.location.href = "./dashboard.html?bus_id=" + selectedBusId;
+        var busNo = document.getElementById("bus-number-input").value.trim();
+        var errorText = document.getElementById("error-msg");
+
+        if (!busNo) {
+          errorText.textContent = "Please enter a bus number.";
+          errorText.classList.remove("hidden");
+          return;
+        }
+
+        try {
+          // Validates against database via C engine and Flask API before proceeding
+          var res = await window.ConductorAPI.getBus(busNo);
+          if (res.ok) {
+            errorText.classList.add("hidden");
+            window.location.href = "./dashboard.html?bus_id=" + encodeURIComponent(busNo);
+          } else {
+            errorText.textContent = res.error || "Bus number not found in database.";
+            errorText.classList.remove("hidden");
+          }
+        } catch (err) {
+          errorText.textContent = "Server connection error.";
+          errorText.classList.remove("hidden");
+        }
       });
     </script>
   </body>
