@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>University Bus System · Student Dashboard</title>
+    <meta name="description" content="Search university buses by destination, see seats, timings, parking zone, conductor and live route progress." />
+    <meta property="og:title" content="University Bus System · Student Dashboard" />
+    <meta property="og:description" content="Search buses by stop, view seats, schedule and route progress." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="icon" href="/favicon.ico" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="bg-slate-100 text-slate-800">
+    <!-- HEADER -->
+    <header class="bg-indigo-600 text-white">
+      <div class="mx-auto flex max-w-5xl items-center justify-between px-4 py-5">
+        <div>
+          <h1 class="text-xl font-bold sm:text-2xl">University Bus System</h1>
+          <p class="text-xs text-indigo-200">Student Dashboard</p>
+        </div>
+        <span class="rounded-lg bg-indigo-500 px-3 py-1 text-xs font-semibold">Today</span>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-5xl px-4 py-6">
+      <!-- SEARCH -->
+      <section class="rounded-xl bg-white p-4 shadow">
+        <form id="search-form" class="flex flex-col gap-3 sm:flex-row">
+          <input
+            id="search-input"
+            type="text"
+            list="stop-list"
+            placeholder="Search destination or stop (e.g. Harrawala)"
+            class="w-full rounded-lg border border-slate-300 px-4 py-3 text-sm outline-none focus:border-indigo-500"
+          />
+          <datalist id="stop-list"></datalist>
+          <button type="submit" class="rounded-lg bg-indigo-600 px-6 py-3 text-sm font-semibold text-white hover:bg-indigo-700">Search</button>
+        </form>
+      </section>
+
+      <!-- LAST AVAILABLE BUS -->
+      <section id="last-bus" class="mt-6"></section>
+
+      <!-- RESULTS -->
+      <section class="mt-6">
+        <h2 id="results-title" class="mb-3 text-lg font-bold">All Buses</h2>
+        <div id="results" class="grid gap-4 sm:grid-cols-2"></div>
+      </section>
+
+      <!-- SCHEDULE -->
+      <section class="mt-8">
+        <h2 class="mb-3 text-lg font-bold">Today's Schedule</h2>
+        <div class="overflow-x-auto rounded-xl bg-white shadow">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+              <tr>
+                <th class="px-4 py-3">Time</th>
+                <th class="px-4 py-3">Bus</th>
+                <th class="px-4 py-3">Destination</th>
+                <th class="px-4 py-3">Seats</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- BUS DETAILS MODAL -->
+    <div id="details" class="fixed inset-0 z-50 hidden items-start justify-center overflow-y-auto bg-black/50 p-4">
+      <div class="my-8 w-full max-w-lg rounded-xl bg-white p-5 shadow-xl">
+        <div class="flex items-start justify-between">
+          <h2 id="details-title" class="text-lg font-bold">Bus Details</h2>
+          <button id="details-close" class="rounded-lg px-3 py-1 text-slate-500 hover:bg-slate-100">✕</button>
+        </div>
+        <div id="details-body" class="mt-4"></div>
+      </div>
+    </div>
+
+    <footer class="py-6 text-center text-xs text-slate-500">
+     </code>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
