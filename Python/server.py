@@ -94,6 +94,20 @@ def end_trip(bus_id):
     except Exception as e:
         return jsonify({"error": "Failed to end trip", "details": process.stdout})
 
+@app.route('/api/station/<station_name>', methods=['GET'])
+def get_buses_by_station(station_name):
+    process = subprocess.run(
+        ['api_engine.exe', 'get_buses_by_stop', str(station_name)], 
+        capture_output=True, 
+        text=True,
+        encoding='utf-8',
+        errors='ignore'
+    )
+    try:
+        return jsonify(json.loads(process.stdout))
+    except Exception as e:
+        return jsonify({"error": "Failed to parse C engine output", "details": process.stdout})
+
 if __name__ == '__main__':
     print("🚦 Traffic Cop Server running on http://localhost:5000 ...")
     app.run(port=5000)

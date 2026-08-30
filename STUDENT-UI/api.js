@@ -1,60 +1,95 @@
 /* =========================================================
-   api.js — THE ONLY FILE YOU EDIT TO CONNECT YOUR C/C++ BACKEND
-   Every screen talks to the app through window.API.
-   Set API_BASE_URL and uncomment the fetch() lines.
+   api.js — STUDENT PORTAL API BRIDGE
    ========================================================= */
 
 (function () {
-  const API_BASE_URL = null; // e.g. "http://localhost:8080/api"
+  const API_BASE_URL = "http://localhost:5000";
 
-  function data() {
-    return JSON.parse(JSON.stringify(window.BUS_DATA || []));
-  }
-
-  // "4:00 PM" -> 960 (minutes since midnight), used for sorting
   function timeToMinutes(timing) {
-    const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(timing).trim());
+    const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)$/i.exec(String(timing || "").trim());
     if (!m) return 0;
     let h = parseInt(m[1], 10) % 12;
     if (m[3].toUpperCase() === "PM") h += 12;
     return h * 60 + parseInt(m[2], 10);
   }
 
+  function normalizeRoute(route) {
+    if (!Array.isArray(route)) return [];
+    return route.map(s => {
+      if (typeof s === 'string') return s;
+      if (s && typeof s === 'object') return s.stopName || s.name || "";
+      return "";
+    }).filter(Boolean);
+  }
+
+  function normalizeBus(b) {
+    if (!b) return null;
+    return {
+      busId: b.busId || b.id,
+      busNo: b.busNo || b.id || "1",
+      registrationNo: b.registrationNo || "",
+      timing: b.timing || b.morningShiftOne || b.morningShiftTwo || b.eveningShift || "7:00 AM",
+      parkingZone: b.parkingZone || "Main Parking",
+      conductor: b.conductorName || b.conductor || "Not Assigned",
+      phone: b.conductorPhone || b.phone || "",
+      availableSeats: b.availableSeats !== undefined ? b.availableSeats : 50,
+      totalSeats: b.totalSeats || 50,
+      route: normalizeRoute(b.route),
+      completedStops: Array.isArray(b.completedStops) ? b.completedStops : [],
+      currentStop: typeof b.currentStop === 'number' ? b.currentStop : 0
+    };
+  }
+
   const API = {
     API_BASE_URL,
     timeToMinutes,
 
-    /* GET /buses */
     async getBuses() {
-      // return (await fetch(`${API_BASE_URL}/buses`)).json();
-      return data();
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/buses`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (Array.isArray(data) ? data : []).map(normalizeBus);
+      } catch (err) {
+        return [];
+      }
     },
 
-    /* GET /buses/:busNo */
     async getBus(busNo) {
-      // return (await fetch(`${API_BASE_URL}/buses/${busNo}`)).json();
-      return data().find((b) => String(b.busNo) === String(busNo)) || null;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/bus/${encodeURIComponent(busNo)}`);
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!data.ok) return null;
+        return normalizeBus(data);
+      } catch (err) {
+        return null;
+      }
     },
 
-    /* GET /buses?destination=... */
     async searchBuses(destination) {
-      // return (await fetch(`${API_BASE_URL}/buses?destination=${encodeURIComponent(destination)}`)).json();
-      const q = String(destination || "").trim().toLowerCase();
-      if (!q) return data();
-      return data()
-        .filter((b) => b.route.some((stop) => stop.toLowerCase().includes(q)))
-        .sort((a, b) => timeToMinutes(a.timing) - timeToMinutes(b.timing));
+      const q = String(destination || "").trim();
+      if (!q) return await API.getBuses();
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/station/${encodeURIComponent(q)}`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        const buses = data.buses || (Array.isArray(data) ? data : []);
+        return buses.map(normalizeBus).sort((a, b) => timeToMinutes(a.timing) - timeToMinutes(b.timing));
+      } catch (err) {
+        return [];
+      }
     },
 
-    /* GET /stops */
     async getStops() {
-      // return (await fetch(`${API_BASE_URL}/stops`)).json();
+      const buses = await API.getBuses();
       const set = new Set();
-      data().forEach((b) => b.route.forEach((s) => set.add(s)));
+      buses.forEach((b) => {
+        b.route.forEach((s) => set.add(s));
+      });
       return Array.from(set).sort();
     },
 
-    /* GET /buses/last-available?destination=... — latest bus that still has seats */
     async getLastAvailableBus(destination) {
       const buses = await API.searchBuses(destination);
       const withSeats = buses.filter((b) => b.availableSeats > 0);
