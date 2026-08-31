@@ -20,10 +20,10 @@ def get_all_buses():
     except Exception as e:
         return jsonify({"error": "Failed to parse C engine output", "details": process.stdout})
 
-@app.route('/api/bus/<bus_id>', methods=['GET'])
-def get_bus_info(bus_id):
+@app.route('/api/bus/<bus_no>', methods=['GET'])
+def get_bus_info(bus_no):
     process = subprocess.run(
-        ['api_engine.exe', 'get_bus', str(bus_id)], 
+        ['api_engine.exe', 'get_bus', str(bus_no)], 
         capture_output=True, 
         text=True,
         encoding='utf-8',
@@ -34,12 +34,12 @@ def get_bus_info(bus_id):
     except Exception as e:
         return jsonify({"error": "Failed to parse C engine output", "details": process.stdout})
 
-@app.route('/api/bus/<bus_id>/parking-zone', methods=['POST'])
-def update_parking(bus_id):
+@app.route('/api/bus/<bus_no>/parking-zone', methods=['POST'])
+def update_parking(bus_no):
     data = request.get_json()
     zone = data.get('zone')
     process = subprocess.run(
-        ['api_engine.exe', 'update_zone', str(bus_id), str(zone)], 
+        ['api_engine.exe', 'update_zone', str(bus_no), str(zone)], 
         capture_output=True, 
         text=True,
         encoding='utf-8',
@@ -50,12 +50,12 @@ def update_parking(bus_id):
     except Exception as e:
         return jsonify({"error": "Failed to update zone", "details": process.stdout})
 
-@app.route('/api/bus/<bus_id>/seats', methods=['POST'])
-def update_seats(bus_id):
+@app.route('/api/bus/<bus_no>/seats', methods=['POST'])
+def update_seats(bus_no):
     data = request.get_json()
     seats = data.get('available_seats')
     process = subprocess.run(
-        ['api_engine.exe', 'update_seats', str(bus_id), str(seats)], 
+        ['api_engine.exe', 'update_seats', str(bus_no), str(seats)], 
         capture_output=True, 
         text=True, 
         encoding='utf-8', 
@@ -66,10 +66,10 @@ def update_seats(bus_id):
     except Exception as e:
         return jsonify({"error": "Failed to update seats", "details": process.stdout})
 
-@app.route('/api/bus/<bus_id>/advance-stop', methods=['POST'])
-def advance_stop(bus_id):
+@app.route('/api/bus/<bus_no>/advance-stop', methods=['POST'])
+def advance_stop(bus_no):
     process = subprocess.run(
-        ['api_engine.exe', 'advance_stop', str(bus_id)], 
+        ['api_engine.exe', 'advance_stop', str(bus_no)], 
         capture_output=True, 
         text=True, 
         encoding='utf-8', 
@@ -80,10 +80,10 @@ def advance_stop(bus_id):
     except Exception as e:
         return jsonify({"error": "Failed to advance stop", "details": process.stdout})
 
-@app.route('/api/bus/<bus_id>/end-trip', methods=['POST'])
-def end_trip(bus_id):
+@app.route('/api/bus/<bus_no>/end-trip', methods=['POST'])
+def end_trip(bus_no):
     process = subprocess.run(
-        ['api_engine.exe', 'end_trip', str(bus_id)], 
+        ['api_engine.exe', 'end_trip', str(bus_no)], 
         capture_output=True, 
         text=True, 
         encoding='utf-8', 
