@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
             const unsigned char *phone = sqlite3_column_text(stmt, 7);
 
             // Fetch live status for seats and zone
-            char zone[64] = "Main Parking";
+            char zone[64] = "Gehu Gate 2";
             int seats = 50;
             sqlite3_stmt *stmt_live;
             const char *sql_live = "SELECT current_parking_zone, available_seats FROM Live_Status WHERE bus_id = ?;";
@@ -69,16 +69,16 @@ int main(int argc, char *argv[]) {
 
             if (!first) printf(",");
             printf("{\"busId\": %d, \"busNo\": \"%s\", \"registrationNo\": \"%s\", \"morningShiftOne\": \"%s\", \"morningShiftTwo\": \"%s\", \"eveningShift\": \"%s\", \"conductorName\": \"%s\", \"conductorPhone\": \"%s\", \"parkingZone\": \"%s\", \"availableSeats\": %d, \"totalSeats\": 50, \"route\": [",
-                   id,
-                   bNo ? (const char*)bNo : "",
-                   regNo ? (const char*)regNo : "",
-                   m1 ? (const char*)m1 : "",
-                   m2 ? (const char*)m2 : "",
-                   ev ? (const char*)ev : "",
-                   conductor ? (const char*)conductor : "Not Assigned",
-                   phone ? (const char*)phone : "",
-                   zone,
-                   seats);
+                    id,
+                    bNo ? (const char*)bNo : "",
+                    regNo ? (const char*)regNo : "",
+                    m1 ? (const char*)m1 : "",
+                    m2 ? (const char*)m2 : "",
+                    ev ? (const char*)ev : "",
+                    conductor ? (const char*)conductor : "Not Assigned",
+                    phone ? (const char*)phone : "",
+                    zone,
+                    seats);
 
             // Query Route Stops for this bus
             const char *sql_route = "SELECT Stops.stop_name FROM Route_Checklist "
@@ -112,10 +112,10 @@ int main(int argc, char *argv[]) {
         }
         char *bus_no = argv[2];
 
-        // Select everything via JOIN so dynamic column mapping handles it safely
+        // Select everything via JOIN ensuring broad match on bus_id or bus_number
         const char *sql_bus = "SELECT Buses.*, Live_Status.* FROM Buses "
                             "LEFT JOIN Live_Status ON Buses.bus_id = Live_Status.bus_id "
-                            "WHERE CAST(Buses.bus_number AS TEXT) = ? OR CAST(Buses.bus_id AS TEXT) = ?;";
+                            "WHERE CAST(Buses.bus_id AS TEXT) = ? OR CAST(Buses.bus_number AS TEXT) = ?;";
 
         sqlite3_stmt *stmt;
         sqlite3_prepare_v2(db, sql_bus, -1, &stmt, 0);
@@ -131,7 +131,7 @@ int main(int argc, char *argv[]) {
             const char *eShift = "";
             const char *conductor = "Not Assigned";
             const char *phone = "";
-            const char *zone = "Main Parking";
+            const char *zone = "Gehu Gate 2";
             int seats = 50;
             int current_stop_id = 0;
 
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
                     zone = (const char*)val;
                 } else if (my_strcasecmp(col_name, "available_seats") == 0 && val) {
                     int s = atoi((const char*)val);
-                    if (s > 0) seats = s;
+                    if (s >= 0) seats = s;
                 } else if (my_strcasecmp(col_name, "current_stop_id") == 0 && val) {
                     current_stop_id = atoi((const char*)val);
                 }
@@ -211,12 +211,13 @@ int main(int argc, char *argv[]) {
         char *bus_no = argv[2];
         char *zone = argv[3];
 
-        const char *sql = "UPDATE Live_Status SET current_parking_zone = ? WHERE bus_id = ? OR bus_id = (SELECT bus_id FROM Buses WHERE bus_number = ?);";
+        const char *sql = "UPDATE Live_Status SET current_parking_zone = ? WHERE bus_id = ? OR bus_id IN (SELECT bus_id FROM Buses WHERE CAST(bus_id AS TEXT) = ? OR bus_number = ?);";
         sqlite3_stmt *stmt;
         sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
         sqlite3_bind_text(stmt, 1, zone, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, bus_no, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 3, bus_no, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 4, bus_no, -1, SQLITE_STATIC);
 
         sqlite3_step(stmt);
         sqlite3_finalize(stmt);
@@ -284,12 +285,13 @@ int main(int argc, char *argv[]) {
         char *bus_no = argv[2];
         int seats = atoi(argv[3]);
 
-        const char *sql = "UPDATE Live_Status SET available_seats = ? WHERE bus_id = ? OR bus_id = (SELECT bus_id FROM Buses WHERE bus_number = ?);";
+        const char *sql = "UPDATE Live_Status SET available_seats = ? WHERE bus_id = ? OR bus_id IN (SELECT bus_id FROM Buses WHERE CAST(bus_id AS TEXT) = ? OR bus_number = ?);";
         sqlite3_stmt *stmt;
         sqlite3_prepare_v2(db, sql, -1, &stmt, 0);
         sqlite3_bind_int(stmt, 1, seats);
         sqlite3_bind_text(stmt, 2, bus_no, -1, SQLITE_STATIC);
         sqlite3_bind_text(stmt, 3, bus_no, -1, SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 4, bus_no, -1, SQLITE_STATIC);
 
         sqlite3_step(stmt);
         sqlite3_finalize(stmt);

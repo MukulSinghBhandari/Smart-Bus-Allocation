@@ -26,10 +26,11 @@
     if (!b) return null;
     return {
       busId: b.busId || b.id,
-      busNo: b.busNo || b.id || "1",
-      registrationNo: b.registrationNo || "",
+      // Fixed: explicitly check busNo first, fall back to bus_number, then busId, avoiding raw primary key collision
+      busNo: String(b.busNo || b.bus_number || b.busId || b.id || "1"),
+      registrationNo: b.registrationNo || b.registration_number || "",
       timing: b.timing || b.morningShiftOne || b.morningShiftTwo || b.eveningShift || "7:00 AM",
-      parkingZone: b.parkingZone || "Main Parking",
+      parkingZone: b.parkingZone || b.parking_zone || "Main Parking",
       conductor: b.conductorName || b.conductor || "Not Assigned",
       phone: b.conductorPhone || b.phone || "",
       availableSeats: b.availableSeats !== undefined ? b.availableSeats : 50,
@@ -55,9 +56,9 @@
       }
     },
 
-    async getBus(busNo) {
+    async getBus(identifier) {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/bus/${encodeURIComponent(busNo)}`);
+        const res = await fetch(`${API_BASE_URL}/api/bus/${encodeURIComponent(identifier)}`);
         if (!res.ok) return null;
         const data = await res.json();
         if (!data.ok) return null;

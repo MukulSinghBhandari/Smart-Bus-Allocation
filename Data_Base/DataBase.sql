@@ -37,3 +37,11 @@ CREATE TABLE Live_Status (
     FOREIGN KEY(bus_id) REFERENCES Buses(bus_id),
     FOREIGN KEY(current_stop_id) REFERENCES Stops(stop_id)
 );
+
+-- AUTOMATIC TRIGGER: Initializes Live_Status row safely without forcing stop_id = 1
+CREATE TRIGGER trg_init_live_status
+AFTER INSERT ON Buses
+BEGIN
+    INSERT INTO Live_Status (bus_id, current_parking_zone, current_stop_id, available_seats)
+    VALUES (NEW.bus_id, 'Gehu Gate 2', NULL, NEW.total_capacity);
+END;
