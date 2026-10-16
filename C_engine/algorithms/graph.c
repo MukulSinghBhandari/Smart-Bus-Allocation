@@ -1,3 +1,4 @@
+// Graph implementation for finding the next stop in a route.
 #include "graph.h"
 #include <stdlib.h>
 
