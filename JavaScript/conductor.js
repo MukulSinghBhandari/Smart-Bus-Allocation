@@ -1,6 +1,7 @@
 // conductor.js
 // Page logic for conductor dashboard
-
+// This file is loaded in the browser and has access to 
+// the ConductorAPI and ConductorCommon objects.
 (function () {
   var bus = null;
 
