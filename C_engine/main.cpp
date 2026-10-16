@@ -1,3 +1,4 @@
+//The C++ code in this file is part of the Campus Transit System project. It serves as the main entry point for the application, handling various commands related to bus management and live status updates. The code interacts with an SQLite database to retrieve and update information about buses, their routes, and their current status.
 #include <iostream>
 #include <string>
 #include <vector>
