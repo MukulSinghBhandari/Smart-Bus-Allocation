@@ -1,3 +1,4 @@
+// Graph header file for finding the next stop in a route.
 #ifndef GRAPH_H
 #define GRAPH_H
 
