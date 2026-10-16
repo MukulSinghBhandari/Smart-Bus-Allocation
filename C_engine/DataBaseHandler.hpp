@@ -1,3 +1,7 @@
+// C_engine/DataBaseHandler.hpp
+//DataBaseHandler.hpp defines the DataBaseHandler class, which encapsulates the management of an SQLite database connection. 
+//It provides methods for opening and closing the database, executing SQL commands, and retrieving error messages. 
+//The class ensures proper resource management and prevents copying or moving to maintain a single database connection instance.
 #pragma once
 
 #include <string>
