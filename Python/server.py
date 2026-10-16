@@ -1,3 +1,8 @@
+# It is the main entry point for the Traffic Cop server, 
+# which acts as a bridge between the C++ engine and the web frontend.
+# What this server does is to receive HTTP requests from the frontend,
+# call the C++ engine with the appropriate arguments, 
+# and return the results back to the frontend
 import subprocess
 import json
 from flask import Flask, request, jsonify
