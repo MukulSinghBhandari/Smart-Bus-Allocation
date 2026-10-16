@@ -1,4 +1,7 @@
 // C_engine/BusModel.hpp
+//BusModel.hpp defines the Bus class, which inherits from the Vehicle class. 
+//It encapsulates bus-specific attributes and behaviors, such as bus number, shifts, parking zone, and available seats. 
+//The class provides getter methods for these attributes and implements a displayInfo method to output bus details.
 #pragma once
 #include <string>
 #include <iostream>
