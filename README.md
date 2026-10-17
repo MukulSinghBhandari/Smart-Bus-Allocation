@@ -190,8 +190,9 @@ Suggested next steps, ordered by value:
 
 ## 9. Contributors
 
-Built as a PBL / capstone project at Graphic Era. Add team members and roles here.
+Project contriutors are :- 
+Mukul Singh Bhandari - Backend Development
+Devanshu Negi - Database 
+Aditya - Api integration
+Sarthak Panwar - Frontend Development 
 
-## 10. License
-
-No license has been specified yet. Add one (for example MIT) before sharing the code publicly.
