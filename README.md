@@ -191,8 +191,9 @@ Suggested next steps, ordered by value:
 ## 9. Contributors
 
 Project contriutors are :- 
-Mukul Singh Bhandari - Backend Development
-Devanshu Negi - Database 
-Aditya - Api integration
-Sarthak Panwar - Frontend Development 
+
+1. Mukul Singh Bhandari - Backend Development
+2. Devanshu Negi - Database 
+3. Aditya Rawat - API integration
+4. Sarthak Panwar - Frontend Development 
 
