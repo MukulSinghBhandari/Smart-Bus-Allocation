@@ -1,3 +1,5 @@
 *.db
 *.exe
 *.obj
+
+!campus_transit.db
