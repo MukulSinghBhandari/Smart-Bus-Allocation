@@ -82,7 +82,7 @@ string jsonEscape(const string& input)
 
 
 // =========================================================
-// Find bus_id using bus ID OR bus number
+// Find bus_id using BUS NUMBER ONLY
 // =========================================================
 
 int findBusId(sqlite3* db, const string& busNo)
@@ -90,8 +90,7 @@ int findBusId(sqlite3* db, const string& busNo)
     const char* sql =
         "SELECT bus_id "
         "FROM Buses "
-        "WHERE CAST(bus_id AS TEXT) = ? "
-        "OR bus_number = ? "
+        "WHERE bus_number = ? "
         "LIMIT 1;";
 
     sqlite3_stmt* stmt = nullptr;
@@ -110,14 +109,6 @@ int findBusId(sqlite3* db, const string& busNo)
     sqlite3_bind_text(
         stmt,
         1,
-        busNo.c_str(),
-        -1,
-        SQLITE_TRANSIENT
-    );
-
-    sqlite3_bind_text(
-        stmt,
-        2,
         busNo.c_str(),
         -1,
         SQLITE_TRANSIENT
@@ -409,8 +400,7 @@ bool getBus(
         "FROM Buses B "
         "LEFT JOIN Live_Status L "
         "ON B.bus_id = L.bus_id "
-        "WHERE CAST(B.bus_id AS TEXT) = ? "
-        "OR B.bus_number = ? "
+        "WHERE B.bus_number = ? "
         "LIMIT 1;";
 
     sqlite3_stmt* stmt = nullptr;
@@ -433,14 +423,6 @@ bool getBus(
     sqlite3_bind_text(
         stmt,
         1,
-        busNo.c_str(),
-        -1,
-        SQLITE_TRANSIENT
-    );
-
-    sqlite3_bind_text(
-        stmt,
-        2,
         busNo.c_str(),
         -1,
         SQLITE_TRANSIENT
