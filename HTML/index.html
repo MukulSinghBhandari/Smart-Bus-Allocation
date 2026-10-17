@@ -1,6 +1,5 @@
 <!-- This is the main entry point for the Conductor Portal -->
 <!-- index.html -->
- 
 
 <!DOCTYPE html>
 <html lang="en" class="bg-slate-100">
@@ -19,20 +18,43 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="./styles.css" />
   </head>
 
   <body class="min-h-dvh bg-slate-100 text-slate-900">
     <main class="mx-auto flex min-h-dvh max-w-md flex-col px-5 py-8">
+
       <!-- Brand -->
       <header class="flex items-center gap-3">
         <div
           class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-sm"
           aria-hidden="true"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6v6"/><path d="M15 6v6"/><path d="M2 12h19.6"/><path d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"/><circle cx="7" cy="18" r="2"/><path d="M9 18h5"/><circle cx="16" cy="18" r="2"/></svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M8 6v6" />
+            <path d="M15 6v6" />
+            <path d="M2 12h19.6" />
+            <path
+              d="M18 18h3s.5-1.7.8-2.8c.1-.4.2-.8.2-1.2 0-.4-.1-.8-.2-1.2l-1.4-5C20.1 6.8 19.1 6 18 6H4a2 2 0 0 0-2 2v10h3"
+            />
+            <circle cx="7" cy="18" r="2" />
+            <path d="M9 18h5" />
+            <circle cx="16" cy="18" r="2" />
+          </svg>
         </div>
+
         <span class="text-sm font-semibold uppercase tracking-wide text-slate-500">
           Smart Bus Transit
         </span>
@@ -40,6 +62,7 @@
 
       <!-- Hero -->
       <section class="mt-16 flex flex-1 flex-col">
+
         <span
           class="inline-flex w-fit items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700"
         >
@@ -47,75 +70,140 @@
           Conductor Access
         </span>
 
-        <h1 class="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-balance">
+        <h1
+          class="mt-5 text-4xl font-extrabold leading-tight tracking-tight text-balance"
+        >
           Conductor Portal
         </h1>
+
         <p class="mt-3 text-base leading-relaxed text-slate-600 text-pretty">
           Enter your bus number to manage your seats and route progress.
         </p>
 
-        <!-- Bus number text input container -->
-        <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <label for="bus-number-input" class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <!-- Bus number input -->
+        <div
+          class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+        >
+          <label
+            for="bus-number-input"
+            class="text-xs font-semibold uppercase tracking-wide text-slate-400"
+          >
             Enter Bus Number
           </label>
+
           <input
             type="text"
             id="bus-number-input"
             placeholder="e.g. 1, 2, or 101"
             class="mt-2 w-full rounded-xl border border-slate-300 p-3 text-base font-semibold text-slate-800 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none"
           />
-          <p id="error-msg" class="mt-2 text-xs font-medium text-rose-600 hidden">Bus number not found in database.</p>
+
+          <p
+            id="error-msg"
+            class="mt-2 hidden text-xs font-medium text-rose-600"
+          >
+            Bus number not found in database.
+          </p>
         </div>
       </section>
 
       <!-- Primary action -->
       <footer class="mt-8">
+
         <a
           id="btn-open-dashboard"
           href="#"
           class="flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 text-lg font-bold text-white shadow-lg shadow-indigo-600/20 transition hover:bg-indigo-700 active:scale-[0.99]"
         >
           Open Bus Dashboard
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
         </a>
+
         <p class="mt-4 text-center text-xs text-slate-400">
           No sign-in required &middot; Frontend demo
         </p>
+
       </footer>
     </main>
 
-    <!-- Scripts: data -> api -> common -> page -->
+    <!-- Scripts -->
     <script src="../JavaScript/data.js"></script>
     <script src="../JavaScript/api_engine.js"></script>
     <script src="../JavaScript/common.js"></script>
+
     <script>
-      document.getElementById("btn-open-dashboard").addEventListener("click", async function (e) {
-        e.preventDefault();
-        var busNo = document.getElementById("bus-number-input").value.trim();
-        var errorText = document.getElementById("error-msg");
+      document
+        .getElementById("btn-open-dashboard")
+        .addEventListener("click", async function (e) {
 
-        if (!busNo) {
-          errorText.textContent = "Please enter a bus number.";
-          errorText.classList.remove("hidden");
-          return;
-        }
+          e.preventDefault();
 
-        try {
-          // Validates against database via C engine and Flask API before proceeding
-          var res = await window.ConductorAPI.getBus(busNo);
-          if (res.ok) {
-            errorText.classList.add("hidden");
-            window.location.href = "./dashboard.html?bus_id=" + encodeURIComponent(busNo);
-          } else {
-            errorText.textContent = res.error || "Bus number not found in database.";
+          var busNo = document
+            .getElementById("bus-number-input")
+            .value
+            .trim();
+
+          var errorText = document.getElementById("error-msg");
+
+          // -----------------------------------------
+          // Validate empty input
+          // -----------------------------------------
+          if (!busNo) {
+            errorText.textContent = "Please enter a bus number.";
+            errorText.classList.remove("hidden");
+            return;
+          }
+
+          try {
+
+            // -----------------------------------------
+            // Validate bus number using backend
+            // -----------------------------------------
+            var res = await window.ConductorAPI.getBus(busNo);
+
+            if (res.ok) {
+
+              errorText.classList.add("hidden");
+
+              // IMPORTANT:
+              // Use bus_no because the user enters a BUS NUMBER,
+              // not the internal database bus_id.
+              window.location.href =
+                "./dashboard.html?bus_no=" +
+                encodeURIComponent(busNo);
+
+            } else {
+
+              errorText.textContent =
+                res.error || "Bus number not found in database.";
+
+              errorText.classList.remove("hidden");
+            }
+
+          } catch (err) {
+
+            console.error("Bus lookup error:", err);
+
+            errorText.textContent =
+              "Server connection error.";
+
             errorText.classList.remove("hidden");
           }
-        } catch (err) {
-          errorText.textContent = "Server connection error.";
-          errorText.classList.remove("hidden");
-        }
-      });
+        });
     </script>
   </body>
 </html>

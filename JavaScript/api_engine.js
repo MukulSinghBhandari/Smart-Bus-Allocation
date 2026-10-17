@@ -5,10 +5,21 @@
 (function () {
   var BASE_URL = "http://localhost:5000";
 
+  // ---------------------------------------------------------
+  // Normalize bus data returned by the backend
+  // ---------------------------------------------------------
   function normalizeBus(raw) {
     return {
-      busId: raw.bus_id !== undefined ? raw.bus_id : raw.busId,
-      busNo: raw.bus_number !== undefined ? raw.bus_number : raw.busNo,
+      busId:
+        raw.bus_id !== undefined
+          ? raw.bus_id
+          : raw.busId,
+
+      busNo:
+        raw.bus_number !== undefined
+          ? raw.bus_number
+          : raw.busNo,
+
       registrationNo:
         raw.registration_number !== undefined
           ? raw.registration_number
@@ -59,35 +70,47 @@
           ? raw.current_stop_id
           : raw.currentStopId,
 
-      route: Array.isArray(raw.route)
-        ? raw.route.map(function (s, index) {
-            return {
-              stopId:
-                s.stop_id !== undefined
-                  ? s.stop_id
-                  : s.stopId,
+      route:
+        Array.isArray(raw.route)
+          ? raw.route.map(function (s, index) {
+              return {
+                stopId:
+                  s.stop_id !== undefined
+                    ? s.stop_id
+                    : s.stopId,
 
-              stopName:
-                s.stop_name !== undefined
-                  ? s.stop_name
-                  : s.stopName,
+                stopName:
+                  s.stop_name !== undefined
+                    ? s.stop_name
+                    : s.stopName,
 
-              stopOrder:
-                s.stop_order !== undefined
-                  ? s.stop_order
-                  : (s.stopOrder !== undefined
-                      ? s.stopOrder
-                      : index + 1)
-            };
-          })
-        : []
+                stopOrder:
+                  s.stop_order !== undefined
+                    ? s.stop_order
+                    : (
+                        s.stopOrder !== undefined
+                          ? s.stopOrder
+                          : index + 1
+                      )
+              };
+            })
+          : []
     };
   }
 
-  async function getBus(busId) {
+  // ---------------------------------------------------------
+  // GET SINGLE BUS
+  //
+  // The value supplied here is the BUS NUMBER.
+  // Example:
+  // getBus("101")
+  // ---------------------------------------------------------
+  async function getBus(busNo) {
     try {
       var response = await fetch(
-        BASE_URL + "/api/bus/" + encodeURIComponent(busId)
+        BASE_URL +
+        "/api/bus/" +
+        encodeURIComponent(busNo)
       );
 
       if (!response.ok) {
@@ -114,34 +137,48 @@
     } catch (err) {
       return {
         ok: false,
-        error: err.message || "Could not reach the server"
+        error:
+          err.message ||
+          "Could not reach the server"
       };
     }
   }
 
+  // ---------------------------------------------------------
+  // GET ASSIGNED BUS
+  //
+  // IMPORTANT:
+  // The URL now uses bus_no, NOT bus_id.
+  //
+  // Example:
+  // dashboard.html?bus_no=101
+  // ---------------------------------------------------------
   async function getAssignedBus() {
-    var urlParams = new URLSearchParams(window.location.search);
+    var urlParams =
+      new URLSearchParams(window.location.search);
 
-    /*
-      IMPORTANT:
-      The URL may contain either bus_id or bus_no.
+    var busNo =
+      urlParams.get("bus_no");
 
-      Example:
-      dashboard.html?bus_id=134
-    */
-
-    var busId = urlParams.get("bus_id");
-
-    if (!busId) {
-      busId = "1";
+    if (!busNo) {
+      return {
+        ok: false,
+        error: "Bus number missing from URL"
+      };
     }
 
-    return await getBus(busId);
+    return await getBus(busNo);
   }
 
+  // ---------------------------------------------------------
+  // GET ALL BUSES
+  // ---------------------------------------------------------
   async function getAllBuses() {
     try {
-      var response = await fetch(BASE_URL + "/api/buses");
+      var response =
+        await fetch(
+          BASE_URL + "/api/buses"
+        );
 
       if (!response.ok) {
         return {
@@ -150,18 +187,31 @@
         };
       }
 
-      var result = await response.json();
+      var result =
+        await response.json();
 
-      if (!result.ok) {
-        return {
-          ok: false,
-          error: result.error || "Failed to fetch buses"
-        };
-      }
+      /*
+        Flask currently returns the array directly.
+        Example:
 
-      var buses = Array.isArray(result.buses)
-        ? result.buses
-        : (Array.isArray(result) ? result : []);
+        [
+          {...},
+          {...}
+        ]
+
+        Therefore we support both:
+        1. Direct array
+        2. { ok:true, buses:[...] }
+      */
+
+      var buses =
+        Array.isArray(result)
+          ? result
+          : (
+              Array.isArray(result.buses)
+                ? result.buses
+                : []
+            );
 
       return {
         ok: true,
@@ -171,34 +221,53 @@
     } catch (err) {
       return {
         ok: false,
-        error: err.message || "Could not reach the server"
+        error:
+          err.message ||
+          "Could not reach the server"
       };
     }
   }
 
-  async function confirmParkingZone(busId, zone) {
+  // ---------------------------------------------------------
+  // UPDATE PARKING ZONE
+  // ---------------------------------------------------------
+  async function confirmParkingZone(
+    busNo,
+    zone
+  ) {
     try {
-      var response = await fetch(
-        BASE_URL + "/api/bus/" +
-        encodeURIComponent(busId) +
-        "/parking-zone",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            zone: zone
-          })
-        }
-      );
+      var response =
+        await fetch(
+          BASE_URL +
+          "/api/bus/" +
+          encodeURIComponent(busNo) +
+          "/parking-zone",
+          {
+            method: "POST",
 
-      var data = await response.json();
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
 
-      if (!response.ok || data.ok === false) {
+            body: JSON.stringify({
+              zone: zone
+            })
+          }
+        );
+
+      var data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        data.ok === false
+      ) {
         return {
           ok: false,
-          error: data.error || "Failed to update parking zone"
+          error:
+            data.error ||
+            "Failed to update parking zone"
         };
       }
 
@@ -210,131 +279,208 @@
     } catch (err) {
       return {
         ok: false,
-        error: err.message || "Could not reach the server"
+        error:
+          err.message ||
+          "Could not reach the server"
       };
     }
   }
 
-  async function adjustSeats(bus, delta) {
+  // ---------------------------------------------------------
+  // ADJUST SEATS
+  // ---------------------------------------------------------
+  async function adjustSeats(
+    bus,
+    delta
+  ) {
     var nextSeats =
-      Number(bus.availableSeats) + Number(delta);
+      Number(bus.availableSeats) +
+      Number(delta);
 
-    /*
-      Client-side validation.
-      Backend will also validate later.
-    */
-
+    // -----------------------------------------
+    // Validate minimum
+    // -----------------------------------------
     if (nextSeats < 0) {
       return {
         ok: false,
-        error: "Available seats cannot be negative"
+        error:
+          "Available seats cannot be negative"
       };
     }
 
-    if (nextSeats > Number(bus.totalSeats)) {
+    // -----------------------------------------
+    // Validate maximum
+    // -----------------------------------------
+    if (
+      nextSeats >
+      Number(bus.totalSeats)
+    ) {
       return {
         ok: false,
-        error: "Available seats cannot exceed total capacity"
+        error:
+          "Available seats cannot exceed total capacity"
       };
     }
 
     try {
-      var response = await fetch(
-        BASE_URL + "/api/bus/" +
-        encodeURIComponent(bus.busNo) +
-        "/seats",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            available_seats: nextSeats
-          })
-        }
-      );
 
-      var data = await response.json();
+      /*
+        IMPORTANT:
+        Use bus.busNo here.
 
-      if (!response.ok || data.ok === false) {
+        This guarantees that the seat update
+        is performed using the BUS NUMBER,
+        not the internal database bus ID.
+      */
+
+      var response =
+        await fetch(
+          BASE_URL +
+          "/api/bus/" +
+          encodeURIComponent(bus.busNo) +
+          "/seats",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              available_seats:
+                nextSeats
+            })
+          }
+        );
+
+      var data =
+        await response.json();
+
+      if (
+        !response.ok ||
+        data.ok === false
+      ) {
         return {
           ok: false,
-          error: data.error || "Failed to update seats"
+          error:
+            data.error ||
+            "Failed to update seats"
         };
       }
 
       /*
-        Do not trust only the local value.
-        Fetch the bus again from the database.
+        Fetch the updated bus again
+        from SQLite.
+
+        This prevents the UI from
+        relying only on its local value.
       */
 
-      return await getBus(bus.busNo);
+      return await getBus(
+        bus.busNo
+      );
 
     } catch (err) {
       return {
         ok: false,
-        error: err.message || "Could not reach the server"
+        error:
+          err.message ||
+          "Could not reach the server"
       };
     }
   }
 
+  // ---------------------------------------------------------
+  // ADVANCE TO NEXT STOP
+  // ---------------------------------------------------------
   async function advanceStop(bus) {
     try {
-      var response = await fetch(
-        BASE_URL + "/api/bus/" +
-        encodeURIComponent(bus.busNo) +
-        "/advance-stop",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
+
+      var response =
+        await fetch(
+          BASE_URL +
+          "/api/bus/" +
+          encodeURIComponent(bus.busNo) +
+          "/advance-stop",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json"
+            }
           }
-        }
-      );
+        );
 
-      var data = await response.json();
+      var data =
+        await response.json();
 
-      if (!response.ok || data.ok === false) {
+      if (
+        !response.ok ||
+        data.ok === false
+      ) {
         return {
           ok: false,
-          error: data.error || "Failed to advance stop"
+          error:
+            data.error ||
+            "Failed to advance stop"
         };
       }
 
       /*
-        Fetch the updated bus from SQLite.
+        Fetch updated bus state
+        from SQLite.
       */
 
-      return await getBus(bus.busNo);
+      return await getBus(
+        bus.busNo
+      );
 
     } catch (err) {
       return {
         ok: false,
-        error: err.message || "Could not reach the server"
+        error:
+          err.message ||
+          "Could not reach the server"
       };
     }
   }
 
+  // ---------------------------------------------------------
+  // END TRIP
+  // ---------------------------------------------------------
   async function endTrip(bus) {
     try {
-      var response = await fetch(
-        BASE_URL + "/api/bus/" +
-        encodeURIComponent(bus.busNo) +
-        "/end-trip",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
+
+      var response =
+        await fetch(
+          BASE_URL +
+          "/api/bus/" +
+          encodeURIComponent(bus.busNo) +
+          "/end-trip",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json"
+            }
           }
-        }
-      );
+        );
 
-      var data = await response.json();
+      var data =
+        await response.json();
 
-      if (!response.ok || data.ok === false) {
+      if (
+        !response.ok ||
+        data.ok === false
+      ) {
         return {
           ok: false,
-          error: data.error || "Failed to end trip"
+          error:
+            data.error ||
+            "Failed to end trip"
         };
       }
 
@@ -342,24 +488,45 @@
         Fetch final state from SQLite.
       */
 
-      return await getBus(bus.busNo);
+      return await getBus(
+        bus.busNo
+      );
 
     } catch (err) {
       return {
         ok: false,
-        error: err.message || "Could not reach the server"
+        error:
+          err.message ||
+          "Could not reach the server"
       };
     }
   }
 
+  // ---------------------------------------------------------
+  // PUBLIC API
+  // ---------------------------------------------------------
   window.ConductorAPI = {
-    getAssignedBus: getAssignedBus,
-    getBus: getBus,
-    getAllBuses: getAllBuses,
-    confirmParkingZone: confirmParkingZone,
-    adjustSeats: adjustSeats,
-    advanceStop: advanceStop,
-    endTrip: endTrip
+
+    getAssignedBus:
+      getAssignedBus,
+
+    getBus:
+      getBus,
+
+    getAllBuses:
+      getAllBuses,
+
+    confirmParkingZone:
+      confirmParkingZone,
+
+    adjustSeats:
+      adjustSeats,
+
+    advanceStop:
+      advanceStop,
+
+    endTrip:
+      endTrip
   };
 
 })();
