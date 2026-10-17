@@ -1,7 +1,8 @@
 // conductor.js
 // Page logic for conductor dashboard
-// This file is loaded in the browser and has access to 
+// This file is loaded in the browser and has access to
 // the ConductorAPI and ConductorCommon objects.
+
 (function () {
   var bus = null;
 
@@ -12,9 +13,14 @@
   function render() {
     if (!bus) return;
 
-    $("topbar-busno").textContent = "BUS " + bus.busNo;
-    $("bus-title").textContent = "BUS " + bus.busNo;
-    $("bus-reg").textContent = bus.registrationNo;
+    $("topbar-busno").textContent =
+      "BUS " + bus.busNo;
+
+    $("bus-title").textContent =
+      "BUS " + bus.busNo;
+
+    $("bus-reg").textContent =
+      bus.registrationNo;
 
     var shiftsText = [
       bus.morningShiftOne,
@@ -54,7 +60,11 @@
       shiftsText || "Regular";
 
     $("stat-zone").textContent =
-      bus.parkingZone || "—";
+      bus.parkingZone || "Not Assigned";
+
+    // -------------------------------------------------------
+    // CURRENT STOP
+    // -------------------------------------------------------
 
     var currentStop =
       bus.route.find(function (s) {
@@ -70,6 +80,10 @@
       bus.route.findIndex(function (s) {
         return s.stopId === bus.currentStopId;
       });
+
+    // -------------------------------------------------------
+    // NEXT STOP
+    // -------------------------------------------------------
 
     var next =
       bus.route[currentIdx + 1];
@@ -91,8 +105,16 @@
           bus.route.length
         : "—";
 
+    // -------------------------------------------------------
+    // ARRIVED BUTTON
+    // -------------------------------------------------------
+
     $("btn-arrived").disabled =
       !bus.parkingZone || !next;
+
+    // -------------------------------------------------------
+    // SEATS
+    // -------------------------------------------------------
 
     var seatInfo =
       window.ConductorCommon.seatStatus(
@@ -126,19 +148,56 @@
     $("btn-seat-plus").disabled =
       bus.availableSeats >= bus.totalSeats;
 
+    // -------------------------------------------------------
+    // PARKING ZONE
+    // -------------------------------------------------------
+
     if (bus.parkingZone) {
-      $("zone-confirmed").classList.remove("hidden");
-      $("zone-confirmed").classList.add("flex");
+
+      $("zone-confirmed")
+        .classList
+        .remove("hidden");
+
+      $("zone-confirmed")
+        .classList
+        .add("flex");
 
       $("zone-confirmed-name").textContent =
         bus.parkingZone;
 
       $("zone-select").value =
         bus.parkingZone;
+
+    } else {
+
+      $("zone-confirmed")
+        .classList
+        .add("hidden");
+
+      $("zone-confirmed")
+        .classList
+        .remove("flex");
+
+      $("zone-confirmed-name").textContent =
+        "";
+
+      $("zone-select").value =
+        "";
     }
 
+    // -------------------------------------------------------
+    // END TRIP
+    //
+    // Enabled ONLY when the bus reaches the
+    // final stop.
+    // -------------------------------------------------------
+
     $("btn-end-trip").disabled =
-      !next;
+      !!next;
+
+    // -------------------------------------------------------
+    // ROUTE TIMELINE
+    // -------------------------------------------------------
 
     window.ConductorCommon.renderTimeline(
       $("route-timeline"),
@@ -147,7 +206,9 @@
   }
 
   function populateZoneSelect() {
-    var select = $("zone-select");
+
+    var select =
+      $("zone-select");
 
     var zones =
       (window.ConductorData &&
@@ -169,23 +230,29 @@
       '<option value="">Select location</option>';
 
     zones.forEach(function (zone) {
+
       var opt =
         document.createElement("option");
 
-      opt.value = zone;
-      opt.textContent = zone;
+      opt.value =
+        zone;
+
+      opt.textContent =
+        zone;
 
       select.appendChild(opt);
     });
   }
 
   async function init() {
+
     populateZoneSelect();
 
     var res =
       await window.ConductorAPI.getAssignedBus();
 
     if (!res.ok) {
+
       console.error(
         "Failed to load assigned bus:",
         res.error
@@ -199,15 +266,14 @@
       return;
     }
 
-    bus = res.data;
+    bus =
+      res.data;
 
     render();
 
-    /*
-      -------------------------
-      SEAT DECREASE
-      -------------------------
-    */
+    // -------------------------------------------------------
+    // SEAT DECREASE
+    // -------------------------------------------------------
 
     $("btn-seat-minus").addEventListener(
       "click",
@@ -220,21 +286,22 @@
           );
 
         if (!res.ok) {
+
           alert(res.error);
+
           return;
         }
 
-        bus = res.data;
+        bus =
+          res.data;
 
         render();
       }
     );
 
-    /*
-      -------------------------
-      SEAT INCREASE
-      -------------------------
-    */
+    // -------------------------------------------------------
+    // SEAT INCREASE
+    // -------------------------------------------------------
 
     $("btn-seat-plus").addEventListener(
       "click",
@@ -247,21 +314,22 @@
           );
 
         if (!res.ok) {
+
           alert(res.error);
+
           return;
         }
 
-        bus = res.data;
+        bus =
+          res.data;
 
         render();
       }
     );
 
-    /*
-      -------------------------
-      PARKING / LOCATION
-      -------------------------
-    */
+    // -------------------------------------------------------
+    // PARKING / LOCATION
+    // -------------------------------------------------------
 
     $("btn-confirm-zone").addEventListener(
       "click",
@@ -271,18 +339,29 @@
           $("zone-select").value;
 
         if (!zone) {
-          alert("Please select a location.");
+
+          alert(
+            "Please select a location."
+          );
+
           return;
         }
 
+        /*
+          IMPORTANT:
+          Send BUS NUMBER, not internal BUS ID.
+        */
+
         var res =
           await window.ConductorAPI.confirmParkingZone(
-            bus.busId,
+            bus.busNo,
             zone
           );
 
         if (!res.ok) {
+
           alert(res.error);
+
           return;
         }
 
@@ -297,21 +376,22 @@
           );
 
         if (!fresh.ok) {
+
           alert(fresh.error);
+
           return;
         }
 
-        bus = fresh.data;
+        bus =
+          fresh.data;
 
         render();
       }
     );
 
-    /*
-      -------------------------
-      NEXT STOP
-      -------------------------
-    */
+    // -------------------------------------------------------
+    // NEXT STOP
+    // -------------------------------------------------------
 
     $("btn-arrived").addEventListener(
       "click",
@@ -323,28 +403,29 @@
           );
 
         if (!res.ok) {
+
           alert(res.error);
+
           return;
         }
 
-        bus = res.data;
+        bus =
+          res.data;
 
         render();
       }
     );
 
-    /*
-      -------------------------
-      END TRIP
-      -------------------------
-    */
+    // -------------------------------------------------------
+    // END TRIP
+    // -------------------------------------------------------
 
     $("btn-end-trip").addEventListener(
       "click",
       async function () {
 
         if (!window.confirm(
-          "End this trip?"
+          "End this trip and reset the bus?"
         )) {
           return;
         }
@@ -355,11 +436,19 @@
           );
 
         if (!res.ok) {
+
           alert(res.error);
+
           return;
         }
 
-        bus = res.data;
+        /*
+          Backend returns the completely
+          reset bus state.
+        */
+
+        bus =
+          res.data;
 
         render();
       }

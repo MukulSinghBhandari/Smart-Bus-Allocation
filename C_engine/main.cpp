@@ -1140,6 +1140,198 @@ bool advanceStop(
 
 
 // =========================================================
+// END TRIP
+//
+// Resets the bus for a completely new trip:
+//   1. Current stop -> first stop of the route
+//   2. Parking zone -> NULL
+//   3. Available seats -> full capacity
+//
+// The bus number is used to identify the bus.
+// =========================================================
+
+bool endTrip(
+    sqlite3* db,
+    const string& busNo
+)
+{
+    // -----------------------------------------------------
+    // Find bus ID using BUS NUMBER
+    // -----------------------------------------------------
+
+    int busId =
+        findBusId(db, busNo);
+
+    if (busId == -1)
+    {
+        cout
+            << "{\"ok\":false,"
+            << "\"error\":\"Bus not found\"}\n";
+
+        return false;
+    }
+
+
+    // -----------------------------------------------------
+    // Get the complete route
+    // -----------------------------------------------------
+
+    vector<int> route;
+
+    if (!getRouteStopIds(
+            db,
+            busId,
+            route
+        ))
+    {
+        cout
+            << "{\"ok\":false,"
+            << "\"error\":\"No route found for bus\"}\n";
+
+        return false;
+    }
+
+
+    // -----------------------------------------------------
+    // First stop becomes the starting stop
+    // for the next trip.
+    // -----------------------------------------------------
+
+    int firstStopId =
+        route.front();
+
+
+    // -----------------------------------------------------
+    // Get total bus capacity
+    // -----------------------------------------------------
+
+    const char* capacitySql =
+        "SELECT total_capacity "
+        "FROM Buses "
+        "WHERE bus_id = ?;";
+
+    sqlite3_stmt* capacityStmt = nullptr;
+
+    if (sqlite3_prepare_v2(
+            db,
+            capacitySql,
+            -1,
+            &capacityStmt,
+            nullptr
+        ) != SQLITE_OK)
+    {
+        cout
+            << "{\"ok\":false,"
+            << "\"error\":\"Failed to read bus capacity\"}\n";
+
+        return false;
+    }
+
+    sqlite3_bind_int(
+        capacityStmt,
+        1,
+        busId
+    );
+
+    int capacity = 0;
+
+    if (sqlite3_step(capacityStmt)
+        == SQLITE_ROW)
+    {
+        capacity =
+            sqlite3_column_int(
+                capacityStmt,
+                0
+            );
+    }
+
+    sqlite3_finalize(capacityStmt);
+
+    if (capacity <= 0)
+    {
+        cout
+            << "{\"ok\":false,"
+            << "\"error\":\"Invalid bus capacity\"}\n";
+
+        return false;
+    }
+
+
+    // -----------------------------------------------------
+    // Reset Live_Status
+    // -----------------------------------------------------
+
+    const char* updateSql =
+        "UPDATE Live_Status "
+        "SET current_stop_id = ?, "
+        "current_parking_zone = NULL, "
+        "available_seats = ? "
+        "WHERE bus_id = ?;";
+
+    sqlite3_stmt* updateStmt = nullptr;
+
+    if (sqlite3_prepare_v2(
+            db,
+            updateSql,
+            -1,
+            &updateStmt,
+            nullptr
+        ) != SQLITE_OK)
+    {
+        cout
+            << "{\"ok\":false,"
+            << "\"error\":\"Failed to prepare end trip reset\"}\n";
+
+        return false;
+    }
+
+    sqlite3_bind_int(
+        updateStmt,
+        1,
+        firstStopId
+    );
+
+    sqlite3_bind_int(
+        updateStmt,
+        2,
+        capacity
+    );
+
+    sqlite3_bind_int(
+        updateStmt,
+        3,
+        busId
+    );
+
+    int rc =
+        sqlite3_step(updateStmt);
+
+    int changes =
+        sqlite3_changes(db);
+
+    sqlite3_finalize(updateStmt);
+
+    if (rc != SQLITE_DONE || changes == 0)
+    {
+        cout
+            << "{\"ok\":false,"
+            << "\"error\":\"Failed to reset bus for next trip\"}\n";
+
+        return false;
+    }
+
+
+    // -----------------------------------------------------
+    // Return completely reset bus
+    // -----------------------------------------------------
+
+    return getBus(
+        db,
+        busNo
+    );
+}
+
+// =========================================================
 // MAIN
 // =========================================================
 
@@ -1322,18 +1514,28 @@ int main(
         }
 
 
-        // -------------------------------------------------
-        // END TRIP
-        // -------------------------------------------------
+        // ---------------------------------------------------------
+// END TRIP
+// ---------------------------------------------------------
 
-        else if (command == "end_trip")
-        {
-            cout
-                << "{\"ok\":false,"
-                << "\"error\":\"End trip is not implemented yet\"}\n";
+else if (command == "end_trip")
+{
+    if (argc < 3)
+    {
+        cout
+            << "{\"ok\":false,"
+            << "\"error\":\"Missing bus number\"}\n";
 
-            return 1;
-        }
+        return 1;
+    }
+
+    return endTrip(
+        db,
+        argv[2]
+    )
+        ? 0
+        : 1;
+}
 
 
         // -------------------------------------------------
