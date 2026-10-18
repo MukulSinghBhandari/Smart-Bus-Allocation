@@ -142,3 +142,23 @@ Bus No,Reg No,Morning Shift One,Morning Shift Two,Evening Shift,Conductor,Phone,
 65,UK07PA4992,6.10 AM,No Service,4:00 PM,Satvinder Singh,7060460781,Ranipokhri-Doiwala-Lachiwala-Kuanwala-Harawala-Miawala-Mokampur-Jogiwala-Rispana-ISBT-Gehu Gate 1
 34,UK07PA2623,6.10 AM,No Service,12:00 PM,Vijay Kumar,8126229032,Ranipokhri-Doiwala-Lachiwala-Kuanwala-Harawala-Miawala-Mokampur-Jogiwala-Rispana-ISBT-Gehu Gate 1
 57,UK07PA4738,6.10 AM,No Service,12:00 PM,Narayan Singh Panwar,9808827678,Ranipokhri-Doiwala-Lachiwala-Kuanwala-Harawala-Miawala-Mokampur-Jogiwala-Rispana-ISBT-Charkhamba
+901,UK07XX9001,6.20 AM,10.20 AM,4:00 PM,Amit Kumar,9000000001,Ranipokhri-Doiwala-Lachiwala-Harawala-Jogiwala-Rispana-ISBT-Gehu Gate 1
+902,UK07XX9002,6.30 AM,10.30 AM,6:00 PM,Rohit Bisht,9000000002,Doiwala-Kuanwala-Miawala-Mokampur-Jogiwala-ISBT-Gehu Gate 2
+903,UK07XX9003,6.40 AM,10.40 AM,12:00 PM,Manoj Rawat,9000000003,Raiwala-Ranipokhri-Doiwala-Lachiwala-ISBT-Gehu Gate 1
+904,UK07XX9004,6.45 AM,10.45 AM,4:00 PM,Sanjay Negi,9000000004,Rajpur-Dilaram Bazar-Survey Chowk-Araghar-Rispana-ISBT-Gehu Gate 2
+905,UK07XX9005,6.50 AM,10.50 AM,6:00 PM,Vikas Chauhan,9000000005,IT Park-Nala Pani-Ladpur-Fountain Chowk-Rispana-Kargi Chowk-ISBT-Charchamba
+906,UK07XX9006,7.00 AM,11.00 AM,12:00 PM,Deepak Bisht,9000000006,Raipur Chowk-Dobhal Chowk-Ring Road-Jogiwala-Rispana-ISBT-Gehu Gate 1
+907,UK07XX9007,7.05 AM,11.05 AM,4:00 PM,Anil Thapa,9000000007,Prem Nagar-Panditwari-Vasant Vihar-Ballupur Chowk-GMS Road-Gehu Gate 2
+908,UK07XX9008,7.10 AM,11.10 AM,6:00 PM,Sunil Rana,9000000008,Vikas Nagar-Harbatpur-Selaqui-Sudhowala-Nanda Ki Chowki-Prem Nagar-Gehu Gate 1
+909,UK07XX9009,7.15 AM,11.15 AM,12:00 PM,Rajesh Kumar,9000000009,Clock Tower-Saharanpur Chowk-Matawala Bagh-ISBT-Charchamba
+910,UK07XX9010,7.20 AM,11.20 AM,4:00 PM,Pawan Singh,9000000010,Prince Chowk-Saharanpur Chowk-Patel Nagar-ISBT-Gehu Gate 2
+911,UK07XX9011,6.25 AM,10.25 AM,6:00 PM,Karan Bisht,9000000011,Banjarawala-Bangali Kothi-Kargi Chowk-ISBT-Gehu Gate 1
+912,UK07XX9012,6.35 AM,10.35 AM,12:00 PM,Harendra Singh,9000000012,Daudwala-Mathurawala-Vishnupuram-Bangali Kothi-Kargi Chowk-ISBT-Gehu Gate 2
+913,UK07XX9013,6.40 AM,10.40 AM,4:00 PM,Ajay Rawat,9000000013,Nakrounda More-Harawala-Miawala-Mokampur-Jogiwala-Rispana-ISBT-Charchamba
+914,UK07XX9014,6.55 AM,10.55 AM,6:00 PM,Mohit Kumar,9000000014,Garhi Cantt-ONGC Chowk-Ballupur Chowk-GMS Road-Gehu Gate 1
+915,UK07XX9015,7.00 AM,11.00 AM,12:00 PM,Pradeep Negi,9000000015,Supply-Ballupur Chowk-Balliwala Chowk-GMS Road-ISBT-Gehu Gate 2
+916,UK07XX9016,7.10 AM,11.10 AM,4:00 PM,Nitin Sharma,9000000016,Selaqui-Sudhowala-Prem Nagar-Panditwari-Balliwala Chowk-GMS Road-Charchamba
+917,UK07XX9017,7.15 AM,11.15 AM,6:00 PM,Gaurav Thapa,9000000017,Shastradhara Crossing-Ladpur-Fountain Chowk-Rispana-Kargi Chowk-ISBT-Gehu Gate 1
+918,UK07XX9018,7.25 AM,11.25 AM,12:00 PM,Sumit Kumar,9000000018,Naya Gaon-Badowala-Telpur-Mehuwala-ISBT-Gehu Gate 2
+919,UK07XX9019,7.30 AM,11.30 AM,4:00 PM,Dinesh Rawat,9000000019,Race Course-Dharampur-Mata Mandir-Kargi Chowk-ISBT-Charchamba
+920,UK07XX9020,7.35 AM,11.35 AM,6:00 PM,Akash Negi,9000000020,Prem Nagar-Nanda Ki Chowki-Vasant Vihar-Ballupur Chowk-GMS Road-Gehu Gate 1
