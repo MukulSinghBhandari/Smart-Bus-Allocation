@@ -54,7 +54,9 @@ def get_bus_info(bus_no):
     except Exception as e:
         # Report the engine output if JSON parsing fails.
         return jsonify({"error": "Failed to parse C++ engine output", "details": process.stdout})
-
+# POST endpoint: Update the parking zone assigned to a bus.
+# Reads the requested zone from the JSON request body.
+# Sends the bus number and zone to the C++ engine.
 @app.route('/api/bus/<bus_no>/parking-zone', methods=['POST'])
 def update_parking(bus_no):
     data = request.get_json()
