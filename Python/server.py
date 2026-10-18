@@ -17,6 +17,9 @@ CORS(app)
 
 # Point to your compiled C++ engine executable
 ENGINE_PATH = 'C_engine/transit_engine.exe'
+# GET endpoint: Retrieve information about all buses.
+# Calls the C++ engine using the get_all_buses command.
+# Parses the engine's JSON output and returns it to the frontend.
 
 @app.route('/api/buses', methods=['GET'])
 def get_all_buses():
@@ -31,6 +34,7 @@ def get_all_buses():
          # Convert the C++ engine's JSON output into a Flask response.
         return jsonify(json.loads(process.stdout))
     except Exception as e:
+        # Return diagnostic information if the output is invalid.
         return jsonify({"error": "Failed to parse C++ engine output", "details": process.stdout})
 # GET endpoint: Retrieve information about all buses.
 # Calls the C++ engine using the get_all_buses command.
@@ -45,9 +49,10 @@ def get_bus_info(bus_no):
         errors='ignore'
     )
     try:
-         # Convert the C++ engine's JSON output into a Flask response.
+          # Return the parsed bus details as JSON.
         return jsonify(json.loads(process.stdout))
     except Exception as e:
+        # Report the engine output if JSON parsing fails.
         return jsonify({"error": "Failed to parse C++ engine output", "details": process.stdout})
 
 @app.route('/api/bus/<bus_no>/parking-zone', methods=['POST'])
