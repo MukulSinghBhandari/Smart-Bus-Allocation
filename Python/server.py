@@ -7,6 +7,7 @@
 import subprocess
 # Import json to parse the engine's JSON output.
 import json
+# Import Flask utilities to create API routes and return JSON responses.
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
