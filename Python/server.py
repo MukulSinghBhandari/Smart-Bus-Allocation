@@ -28,6 +28,7 @@ def get_all_buses():
         errors='ignore'
     )
     try:
+         # Convert the C++ engine's JSON output into a Flask response.
         return jsonify(json.loads(process.stdout))
     except Exception as e:
         return jsonify({"error": "Failed to parse C++ engine output", "details": process.stdout})
