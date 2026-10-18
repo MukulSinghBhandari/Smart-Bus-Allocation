@@ -9,6 +9,7 @@ import subprocess
 import json
 # Import Flask utilities to create API routes and return JSON responses.
 from flask import Flask, request, jsonify
+# Enable Cross-Origin Resource Sharing for frontend requests.
 from flask_cors import CORS
 
 app = Flask(__name__)
