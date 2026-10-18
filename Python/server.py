@@ -5,6 +5,7 @@
 # and return the results back to the frontend
 # Import subprocess to execute the compiled C++ engine.
 import subprocess
+# Import json to parse the engine's JSON output.
 import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
