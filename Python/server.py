@@ -69,10 +69,14 @@ def update_parking(bus_no):
         errors='ignore'
     )
     try:
+        # Return the engine's response after the zone update.
         return jsonify(json.loads(process.stdout))
     except Exception as e:
+         # Return an error if the update response cannot be parsed.
         return jsonify({"error": "Failed to update zone", "details": process.stdout})
-
+# POST endpoint: Update the number of available seats on a bus.
+# Reads available_seats from the incoming JSON request.
+# Passes the bus number and seat count to the C++ engine.
 @app.route('/api/bus/<bus_no>/seats', methods=['POST'])
 def update_seats(bus_no):
     data = request.get_json()
