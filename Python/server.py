@@ -3,6 +3,7 @@
 # What this server does is to receive HTTP requests from the frontend,
 # call the C++ engine with the appropriate arguments, 
 # and return the results back to the frontend
+# Import subprocess to execute the compiled C++ engine.
 import subprocess
 import json
 from flask import Flask, request, jsonify
