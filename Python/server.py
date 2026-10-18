@@ -31,7 +31,9 @@ def get_all_buses():
         return jsonify(json.loads(process.stdout))
     except Exception as e:
         return jsonify({"error": "Failed to parse C++ engine output", "details": process.stdout})
-
+# GET endpoint: Retrieve information about all buses.
+# Calls the C++ engine using the get_all_buses command.
+# Parses the engine's JSON output and returns it to the frontend.
 @app.route('/api/bus/<bus_no>', methods=['GET'])
 def get_bus_info(bus_no):
     process = subprocess.run(
