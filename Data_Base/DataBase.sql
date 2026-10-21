@@ -6,8 +6,8 @@ CREATE TABLE Stops (
 
 -- Table 2: Fleet Details (Updated to match the new shift structure)
 CREATE TABLE Buses (
-    bus_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bus_number TEXT NOT NULL,
+    bus_id INTEGER PRIMARY KEY,
+    bus_number TEXT NOT NULL UNIQUE,
     registration_number TEXT,
     morning_shift_one TEXT,
     morning_shift_two TEXT,
