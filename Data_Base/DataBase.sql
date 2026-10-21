@@ -23,9 +23,10 @@ CREATE TABLE Route_Checklist (
     checklist_id INTEGER PRIMARY KEY,
     bus_id INTEGER NOT NULL,
     stop_id INTEGER NOT NULL,
-    stop_order INTEGER, 
+    stop_order INTEGER NOT NULL CHECK (stop_order > 0),
     FOREIGN KEY(bus_id) REFERENCES Buses(bus_id),
-    FOREIGN KEY(stop_id) REFERENCES Stops(stop_id)
+    FOREIGN KEY(stop_id) REFERENCES Stops(stop_id),
+    UNIQUE (bus_id, stop_order)
 );
 
 -- Table 4: The Live Tracker
