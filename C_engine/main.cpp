@@ -1155,55 +1155,28 @@ bool endTrip(
     const string& busNo
 )
 {
-    // -----------------------------------------------------
-    // Find bus ID using BUS NUMBER
-    // -----------------------------------------------------
-
-    int busId =
-        findBusId(db, busNo);
+    int busId = findBusId(db, busNo);
 
     if (busId == -1)
     {
         cout
             << "{\"ok\":false,"
             << "\"error\":\"Bus not found\"}\n";
-
         return false;
     }
 
-
-    // -----------------------------------------------------
-    // Get the complete route
-    // -----------------------------------------------------
-
     vector<int> route;
 
-    if (!getRouteStopIds(
-            db,
-            busId,
-            route
-        ))
+    if (!getRouteStopIds(db, busId, route))
     {
         cout
             << "{\"ok\":false,"
             << "\"error\":\"No route found for bus\"}\n";
-
         return false;
     }
 
-
-    // -----------------------------------------------------
-    // First stop becomes the starting stop
-    // for the next trip.
-    // -----------------------------------------------------
-
-    int firstStopId =
-        route.front();
-
-
-    // -----------------------------------------------------
-    // Get total bus capacity
-    // -----------------------------------------------------
+    const int firstStopId = route.front();
+    const int finalStopId = route.back();
 
     const char* capacitySql =
         "SELECT total_capacity "
@@ -1223,50 +1196,38 @@ bool endTrip(
         cout
             << "{\"ok\":false,"
             << "\"error\":\"Failed to read bus capacity\"}\n";
-
         return false;
     }
 
-    sqlite3_bind_int(
-        capacityStmt,
-        1,
-        busId
-    );
+    sqlite3_bind_int(capacityStmt, 1, busId);
 
     int capacity = 0;
+    const int capacityResult = sqlite3_step(capacityStmt);
 
-    if (sqlite3_step(capacityStmt)
-        == SQLITE_ROW)
+    if (capacityResult == SQLITE_ROW)
     {
-        capacity =
-            sqlite3_column_int(
-                capacityStmt,
-                0
-            );
+        capacity = sqlite3_column_int(capacityStmt, 0);
     }
 
     sqlite3_finalize(capacityStmt);
 
-    if (capacity <= 0)
+    if (capacityResult != SQLITE_ROW || capacity <= 0)
     {
         cout
             << "{\"ok\":false,"
             << "\"error\":\"Invalid bus capacity\"}\n";
-
         return false;
     }
-
-
-    // -----------------------------------------------------
-    // Reset Live_Status
-    // -----------------------------------------------------
 
     const char* updateSql =
         "UPDATE Live_Status "
         "SET current_stop_id = ?, "
         "current_parking_zone = NULL, "
         "available_seats = ? "
-        "WHERE bus_id = ?;";
+        "WHERE bus_id = ? "
+        "AND current_stop_id = ? "
+        "AND current_parking_zone IS NOT NULL "
+        "AND current_parking_zone <> '';";
 
     sqlite3_stmt* updateStmt = nullptr;
 
@@ -1280,55 +1241,37 @@ bool endTrip(
     {
         cout
             << "{\"ok\":false,"
-            << "\"error\":\"Failed to prepare end trip reset\"}\n";
-
+            << "\"error\":\"Failed to prepare end-trip reset\"}\n";
         return false;
     }
 
-    sqlite3_bind_int(
-        updateStmt,
-        1,
-        firstStopId
-    );
+    sqlite3_bind_int(updateStmt, 1, firstStopId);
+    sqlite3_bind_int(updateStmt, 2, capacity);
+    sqlite3_bind_int(updateStmt, 3, busId);
+    sqlite3_bind_int(updateStmt, 4, finalStopId);
 
-    sqlite3_bind_int(
-        updateStmt,
-        2,
-        capacity
-    );
-
-    sqlite3_bind_int(
-        updateStmt,
-        3,
-        busId
-    );
-
-    int rc =
-        sqlite3_step(updateStmt);
-
-    int changes =
-        sqlite3_changes(db);
+    const int rc = sqlite3_step(updateStmt);
+    const int changes = sqlite3_changes(db);
 
     sqlite3_finalize(updateStmt);
 
-    if (rc != SQLITE_DONE || changes == 0)
+    if (rc != SQLITE_DONE)
     {
         cout
             << "{\"ok\":false,"
             << "\"error\":\"Failed to reset bus for next trip\"}\n";
-
         return false;
     }
 
+    if (changes == 0)
+    {
+        cout
+            << "{\"ok\":false,"
+            << "\"error\":\"Trip can only end after reaching the final stop\"}\n";
+        return false;
+    }
 
-    // -----------------------------------------------------
-    // Return completely reset bus
-    // -----------------------------------------------------
-
-    return getBus(
-        db,
-        busNo
-    );
+    return getBus(db, busNo);
 }
 
 // =========================================================
