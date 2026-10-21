@@ -31,11 +31,12 @@ CREATE TABLE Route_Checklist (
 
 -- Table 4: The Live Tracker
 CREATE TABLE Live_Status (
-    status_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bus_id INTEGER,
+    status_id INTEGER PRIMARY KEY,
+    bus_id INTEGER NOT NULL UNIQUE,
     current_parking_zone TEXT,
     current_stop_id INTEGER,
-    available_seats INTEGER,
+    available_seats INTEGER NOT NULL DEFAULT 0
+        CHECK (available_seats >= 0),
     FOREIGN KEY(bus_id) REFERENCES Buses(bus_id),
     FOREIGN KEY(current_stop_id) REFERENCES Stops(stop_id)
 );
