@@ -14,7 +14,7 @@ Bus No,Reg No,Morning Shift One,Morning Shift Two,Evening Shift,Conductor,Phone,
 595,UK07PA4171,6.45 AM,10.45 AM,6:00 PM,Jitender,9389354743,Raipur Chowk-Dobhal Chowk-6 No. Pulia-Ring Road-Post Office Nehru Gram-Jogiwala-Rispana-ISBT-Charchamba
 77,UK07PA5019,6.45 AM,10.45 AM,12:00 PM,Gajender Singh Rana,7535907988,Post Office Nehru Gram-Jogiwala-Rispana-ISBT-Gehu Gate 1
 800,UK07PA1266,6.45 AM,10.45 AM,6:00 PM,Sanjeev Gurung,7464924796,Post Office Nehru Gram-Jogiwala-Rispana-ISBT-Gehu Gate 1
-190,UK07PA2190,7.00 AM,11.00 AM,4:00 PM,Sunil Kumar,8958342280,Hathibadkala-Garhi Cantt-ONGC Chowk-Ballupur Chowk-GMS Road-Geu Gate 2
+1,UK07PA2190,7.00 AM,11.00 AM,4:00 PM,Sunil Kumar,8958342280,Hathibadkala-Garhi Cantt-ONGC Chowk-Ballupur Chowk-GMS Road-Geu Gate 2
 21,UK07PA1910,7.00 AM,11.00 AM,12:00 PM,Narender,7088945378,Hathibadkala-Garhi Cantt-ONGC Chowk-Ballupur Chowk-GMS Road-Geu Gate 2
 69,UK07PA4998,7.00 AM,11.00 AM,12:00 PM,Veer Singh,9997810167,Garhi Cantt-Vijay Coloney-Chir Bagh-CM House-Garhi Cantt-ONGC Chowk-Ballupur Chowk-GMS Road-Geu Gate 2
 81,UK07PA5030,7.00 AM,11.00 AM,12:00 PM,Sher Bahadur,8126296527,Rajender Nagar-Yamuna Coloney-Bindal Pul-Kishan Nagar-Blood Bank-Ballupur Chowk-GMS Road-Geu Gate 2
@@ -88,7 +88,7 @@ Bus No,Reg No,Morning Shift One,Morning Shift Two,Evening Shift,Conductor,Phone,
 160,UA07L5333,8.00 AM,No Service,6:00 PM,Kamal Singh kathait,9760821022,Survey Chowk-Dwarka Store-Araghar-Dharampur Chowk-Mata Mandir-Kargi Chowk-ISBT-Gehu Gate 2
 134,UK07PA2623,7.35 AM,No Service,6:00 PM,Rai Singh,8476923507,Selaqui Chowk-Sudhowala-Nanda Ki Chowki-Premnagar-Panditwari-Vasant Vihar-Baliwala Chowk-GMS Road-Gehu Gate 2
 511,UK07PA4119,7.00 AM,No Service,6:00 PM,Manjeet,8006136454,Kulhal-ISBT-Gehu Gate 1
-1,UK07PA1688,7.10 AM,No Service,12:00 PM,Mahipal,8476923600,Bahuwala Raja Road-Raja Road-Bansiwala-Manduwala-Sudhowala-Nanda Ki Chowki-Prem Nagar-Panditwari-Balliwalachowk-GMS Road-Gehu Gate 2
+921,UK07PA1688,7.10 AM,No Service,12:00 PM,Mahipal,8476923600,Bahuwala Raja Road-Raja Road-Bansiwala-Manduwala-Sudhowala-Nanda Ki Chowki-Prem Nagar-Panditwari-Balliwalachowk-GMS Road-Gehu Gate 2
 114,UK07PA1811,8.00 AM,No Service,6:00 PM,Mukesh Paswan,8979510919,Doiwala-Lachiwala-Kuanwala-Harawala-Miawala-Mokampur-Jogiwala-Rispana-ISBT-Gehu Gate 2
 7,UK07PA2333,8.00 AM,No Service,6:00 PM,Pooran,7830237279,Nakrounda More-Harawala-Miawala-Mokampur-Jogiwala-Rispana-ISBT-Geu Gate 2
 25,UK07PA1689,8.00 AM,No Service,12:00 PM,Rahul Kumar,7017174879,Kali Mandir-Ladpur-6 No. Pulia-Fountain Chowk Rispana-Kargi Chowk-ISBT-Geu Gate 2
