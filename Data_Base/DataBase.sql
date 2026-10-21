@@ -44,7 +44,18 @@ CREATE TABLE Live_Status (
 -- AUTOMATIC TRIGGER: Initializes Live_Status row safely without forcing stop_id = 1
 CREATE TRIGGER trg_init_live_status
 AFTER INSERT ON Buses
+FOR EACH ROW
 BEGIN
-    INSERT INTO Live_Status (bus_id, current_parking_zone, current_stop_id, available_seats)
-    VALUES (NEW.bus_id, 'Gehu Gate 2', NULL, NEW.total_capacity);
+    INSERT INTO Live_Status (
+        bus_id, 
+        current_parking_zone, 
+        current_stop_id, 
+        available_seats
+    )
+    VALUES (
+        NEW.bus_id, 
+        'Gehu Gate 2', 
+        NULL, 
+        NEW.total_capacity
+    );
 END;
