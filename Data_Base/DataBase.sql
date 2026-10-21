@@ -1,7 +1,7 @@
 -- Table 1: All Unique Bus Stops in the City
 CREATE TABLE Stops (
-    stop_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    stop_name TEXT NOT NULL UNIQUE
+    stop_id INTEGER PRIMARY KEY,
+    stop_name TEXT NOT NULL COLLATE NOCASE UNIQUE
 );
 
 -- Table 2: Fleet Details (Updated to match the new shift structure)
