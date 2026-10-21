@@ -20,9 +20,9 @@ CREATE TABLE Buses (
 
 -- Table 3: The Route Checklist (Maps the ordered sequence of stops for each bus route)
 CREATE TABLE Route_Checklist (
-    checklist_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    bus_id INTEGER,
-    stop_id INTEGER,
+    checklist_id INTEGER PRIMARY KEY,
+    bus_id INTEGER NOT NULL,
+    stop_id INTEGER NOT NULL,
     stop_order INTEGER, 
     FOREIGN KEY(bus_id) REFERENCES Buses(bus_id),
     FOREIGN KEY(stop_id) REFERENCES Stops(stop_id)
