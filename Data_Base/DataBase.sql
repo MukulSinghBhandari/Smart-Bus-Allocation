@@ -8,13 +8,14 @@ CREATE TABLE Stops (
 CREATE TABLE Buses (
     bus_id INTEGER PRIMARY KEY,
     bus_number TEXT NOT NULL UNIQUE,
-    registration_number TEXT,
+    registration_number TEXT UNIQUE,
     morning_shift_one TEXT,
     morning_shift_two TEXT,
     evening_shift TEXT,
     conductor_name TEXT,
     conductor_phone TEXT,
-    total_capacity INTEGER DEFAULT 50
+    total_capacity INTEGER NOT NULL DEFAULT 50
+        CHECK (total_capacity > 0)
 );
 
 -- Table 3: The Route Checklist (Maps the ordered sequence of stops for each bus route)
