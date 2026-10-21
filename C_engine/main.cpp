@@ -132,6 +132,8 @@ int findBusId(sqlite3* db, const string& busNo)
 // GET ALL BUSES
 // =========================================================
 
+bool getBusRoute(sqlite3* db, int busId);
+
 bool getAllBuses(sqlite3* db)
 {
     const char* sql =
@@ -155,18 +157,10 @@ bool getAllBuses(sqlite3* db)
 
     sqlite3_stmt* stmt = nullptr;
 
-    if (sqlite3_prepare_v2(
-            db,
-            sql,
-            -1,
-            &stmt,
-            nullptr
-        ) != SQLITE_OK)
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
     {
-        cout
-            << "{\"ok\":false,"
-            << "\"error\":\"Failed to prepare get_all_buses query\"}\n";
-
+        cout << "{\"ok\":false,"
+             << "\"error\":\"Failed to prepare get_all_buses query\"}\n";
         return false;
     }
 
@@ -176,52 +170,27 @@ bool getAllBuses(sqlite3* db)
 
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        int busId =
-            sqlite3_column_int(stmt, 0);
-
-        string busNo =
-            getText(stmt, 1);
-
-        string registrationNo =
-            getText(stmt, 2);
-
-        string morningShiftOne =
-            getText(stmt, 3);
-
-        string morningShiftTwo =
-            getText(stmt, 4);
-
-        string eveningShift =
-            getText(stmt, 5);
-
-        string conductorName =
-            getText(stmt, 6);
-
-        string conductorPhone =
-            getText(stmt, 7);
-
-        int totalCapacity =
-            sqlite3_column_int(stmt, 8);
-
-        string parkingZone =
-            getText(stmt, 9);
+        int busId = sqlite3_column_int(stmt, 0);
+        string busNo = getText(stmt, 1);
+        string registrationNo = getText(stmt, 2);
+        string morningShiftOne = getText(stmt, 3);
+        string morningShiftTwo = getText(stmt, 4);
+        string eveningShift = getText(stmt, 5);
+        string conductorName = getText(stmt, 6);
+        string conductorPhone = getText(stmt, 7);
+        int totalCapacity = sqlite3_column_int(stmt, 8);
+        string parkingZone = getText(stmt, 9);
 
         int availableSeats = 0;
-
-        if (sqlite3_column_type(stmt, 10)
-            != SQLITE_NULL)
+        if (sqlite3_column_type(stmt, 10) != SQLITE_NULL)
         {
-            availableSeats =
-                sqlite3_column_int(stmt, 10);
+            availableSeats = sqlite3_column_int(stmt, 10);
         }
 
         int currentStopId = -1;
-
-        if (sqlite3_column_type(stmt, 11)
-            != SQLITE_NULL)
+        if (sqlite3_column_type(stmt, 11) != SQLITE_NULL)
         {
-            currentStopId =
-                sqlite3_column_int(stmt, 11);
+            currentStopId = sqlite3_column_int(stmt, 11);
         }
 
         if (!first)
@@ -231,66 +200,35 @@ bool getAllBuses(sqlite3* db)
 
         first = false;
 
-        cout
-            << "{"
-            << "\"busId\":" << busId << ","
-            << "\"busNo\":\""
-            << jsonEscape(busNo)
-            << "\","
+        cout << "{"
+             << "\"busId\":" << busId << ","
+             << "\"busNo\":\"" << jsonEscape(busNo) << "\","
+             << "\"registrationNo\":\"" << jsonEscape(registrationNo) << "\","
+             << "\"morningShiftOne\":\"" << jsonEscape(morningShiftOne) << "\","
+             << "\"morningShiftTwo\":\"" << jsonEscape(morningShiftTwo) << "\","
+             << "\"eveningShift\":\"" << jsonEscape(eveningShift) << "\","
+             << "\"conductorName\":\""
+             << jsonEscape(conductorName.empty() ? "Not Assigned" : conductorName)
+             << "\","
+             << "\"conductorPhone\":\"" << jsonEscape(conductorPhone) << "\","
+             << "\"parkingZone\":\"" << jsonEscape(parkingZone) << "\","
+             << "\"availableSeats\":" << availableSeats << ","
+             << "\"totalSeats\":" << totalCapacity << ","
+             << "\"currentStopId\":" << currentStopId << ",";
 
-            << "\"registrationNo\":\""
-            << jsonEscape(registrationNo)
-            << "\","
+        if (!getBusRoute(db, busId))
+        {
+            cout << "\"route\":[]";
+        }
 
-            << "\"morningShiftOne\":\""
-            << jsonEscape(morningShiftOne)
-            << "\","
-
-            << "\"morningShiftTwo\":\""
-            << jsonEscape(morningShiftTwo)
-            << "\","
-
-            << "\"eveningShift\":\""
-            << jsonEscape(eveningShift)
-            << "\","
-
-            << "\"conductorName\":\""
-            << jsonEscape(
-                conductorName.empty()
-                    ? "Not Assigned"
-                    : conductorName
-            )
-            << "\","
-
-            << "\"conductorPhone\":\""
-            << jsonEscape(conductorPhone)
-            << "\","
-
-            << "\"parkingZone\":\""
-            << jsonEscape(parkingZone)
-            << "\","
-
-            << "\"availableSeats\":"
-            << availableSeats
-            << ","
-
-            << "\"totalSeats\":"
-            << totalCapacity
-            << ","
-
-            << "\"currentStopId\":"
-            << currentStopId
-
-            << "}";
+        cout << "}";
     }
 
     cout << "]\n";
 
     sqlite3_finalize(stmt);
-
     return true;
 }
-
 
 // =========================================================
 // GET ROUTE FOR A BUS
