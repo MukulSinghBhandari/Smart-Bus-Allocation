@@ -44,6 +44,7 @@ string getText(sqlite3_stmt* stmt, int column)
 
 // =========================================================
 // Escape string for JSON
+// IT IS IMPORTANT TO ESCAPE STRINGS FOR JSON TO AVOID SYNTAX ERRORS AND SECURITY ISSUES.
 // =========================================================
 
 string jsonEscape(const string& input)
@@ -84,7 +85,7 @@ string jsonEscape(const string& input)
 
 
 // =========================================================
-// Find bus_id using BUS NUMBER ONLY
+// Find bus_id using BUS NUMBER ONLY 
 // =========================================================
 
 int findBusId(sqlite3* db, const string& busNo)
