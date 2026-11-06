@@ -19,6 +19,8 @@
 extern "C"
 {
 #include "algorithms/graph.h"
+#include "algorithms/queue.h"
+#include "algorithms/priority_queue.h"
 }
 
 using namespace std;
@@ -733,17 +735,32 @@ bool getBusesByStop(
     const string& stopQuery
 )
 {
+    // Return a bus only if the searched stop is still ahead of it
+    // or is its current stop. A bus that has already passed the
+    // searched stop must not appear in the student search results.
     const char* sql =
         "SELECT DISTINCT "
-        "Buses.bus_id, "
-        "Buses.bus_number "
-        "FROM Buses "
-        "JOIN Route_Checklist "
-        "ON Buses.bus_id = Route_Checklist.bus_id "
-        "JOIN Stops "
-        "ON Route_Checklist.stop_id = Stops.stop_id "
-        "WHERE Stops.stop_name LIKE ? "
-        "ORDER BY Buses.bus_id;";
+        "B.bus_id, "
+        "B.bus_number "
+        "FROM Buses B "
+        "JOIN Route_Checklist R "
+        "ON B.bus_id = R.bus_id "
+        "JOIN Stops S "
+        "ON R.stop_id = S.stop_id "
+        "LEFT JOIN Live_Status L "
+        "ON B.bus_id = L.bus_id "
+        "WHERE S.stop_name LIKE ? "
+        "AND ( "
+        "    L.current_stop_id IS NULL "
+        "    OR EXISTS ( "
+        "        SELECT 1 "
+        "        FROM Route_Checklist C "
+        "        WHERE C.bus_id = B.bus_id "
+        "          AND C.stop_id = L.current_stop_id "
+        "          AND C.stop_order <= R.stop_order "
+        "    ) "
+        ") "
+        "ORDER BY B.bus_id;";
 
     sqlite3_stmt* stmt = nullptr;
 
@@ -784,11 +801,8 @@ bool getBusesByStop(
 
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        int busId =
-            sqlite3_column_int(stmt, 0);
-
-        string busNo =
-            getText(stmt, 1);
+        int busId = sqlite3_column_int(stmt, 0);
+        string busNo = getText(stmt, 1);
 
         if (!first)
         {
@@ -799,22 +813,15 @@ bool getBusesByStop(
 
         cout
             << "{"
-            << "\"busId\":"
-            << busId
-            << ","
-            << "\"busNo\":\""
-            << jsonEscape(busNo)
-            << "\""
+            << "\"busId\":" << busId << ","
+            << "\"busNo\":\"" << jsonEscape(busNo) << "\""
             << "}";
     }
 
     cout << "]}\n";
-
     sqlite3_finalize(stmt);
-
     return true;
 }
-
 
 // =========================================================
 // GET ROUTE STOP IDS
@@ -1215,6 +1222,428 @@ bool endTrip(
     return getBus(db, busNo);
 }
 
+
+// =========================================================
+// DSA MODULE: PERSISTENT STUDENT REQUEST QUEUE + BUS PRIORITY QUEUE
+// =========================================================
+//
+// Queue:
+//   Student allocation requests are processed in FIFO order.
+//
+// Priority Queue (Max Heap):
+//   1. More available seats = higher priority.
+//   2. Smaller pickup stop_order = higher priority.
+//   3. Smaller bus_id = tie-breaker.
+//
+// Only buses that:
+//   - have enough seats,
+//   - contain pickup and destination in the correct order,
+//   - have not already passed the pickup stop
+// are inserted into the C Priority Queue.
+//
+// The C Queue is in-memory, so requests are first stored in SQLite.
+// Each process reconstructs the FIFO queue from PENDING rows.
+//
+// =========================================================
+
+bool ensureAllocationRequestTable(sqlite3* db)
+{
+    const char* sql =
+        "CREATE TABLE IF NOT EXISTS Allocation_Requests ("
+        "request_id INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "pickup_stop_id INTEGER NOT NULL,"
+        "destination_stop_id INTEGER NOT NULL,"
+        "seats_requested INTEGER NOT NULL CHECK(seats_requested > 0),"
+        "status TEXT NOT NULL DEFAULT 'PENDING' "
+        "CHECK(status IN ('PENDING','ALLOCATED')),"
+        "assigned_bus_id INTEGER,"
+        "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,"
+        "processed_at TEXT,"
+        "FOREIGN KEY(pickup_stop_id) REFERENCES Stops(stop_id),"
+        "FOREIGN KEY(destination_stop_id) REFERENCES Stops(stop_id),"
+        "FOREIGN KEY(assigned_bus_id) REFERENCES Buses(bus_id),"
+        "CHECK(pickup_stop_id <> destination_stop_id)"
+        ");";
+
+    char* errorMessage = nullptr;
+    int rc = sqlite3_exec(db, sql, nullptr, nullptr, &errorMessage);
+
+    if (rc != SQLITE_OK)
+    {
+        cout << "{\"ok\":false,\"error\":\""
+             << jsonEscape(errorMessage ? errorMessage : sqlite3_errmsg(db))
+             << "\"}\n";
+        if (errorMessage) sqlite3_free(errorMessage);
+        return false;
+    }
+
+    return true;
+}
+
+
+bool stopExists(sqlite3* db, int stopId)
+{
+    const char* sql = "SELECT 1 FROM Stops WHERE stop_id = ? LIMIT 1;";
+    sqlite3_stmt* stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+        return false;
+
+    sqlite3_bind_int(stmt, 1, stopId);
+    bool exists = (sqlite3_step(stmt) == SQLITE_ROW);
+    sqlite3_finalize(stmt);
+
+    return exists;
+}
+
+
+// Command:
+//   transit_engine.exe submit_request <pickup_stop_id> <destination_stop_id> <seats>
+bool submitAllocationRequest(
+    sqlite3* db,
+    int pickupStopId,
+    int destinationStopId,
+    int seatsRequested
+)
+{
+    if (pickupStopId <= 0 || destinationStopId <= 0 ||
+        pickupStopId == destinationStopId || seatsRequested <= 0)
+    {
+        cout << "{\"ok\":false,\"error\":\"Invalid pickup, destination or seat count\"}\n";
+        return false;
+    }
+
+    if (!stopExists(db, pickupStopId) || !stopExists(db, destinationStopId))
+    {
+        cout << "{\"ok\":false,\"error\":\"Pickup or destination stop does not exist\"}\n";
+        return false;
+    }
+
+    const char* sql =
+        "INSERT INTO Allocation_Requests "
+        "(pickup_stop_id, destination_stop_id, seats_requested, status) "
+        "VALUES (?, ?, ?, 'PENDING');";
+
+    sqlite3_stmt* stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        cout << "{\"ok\":false,\"error\":\"Could not prepare allocation request\"}\n";
+        return false;
+    }
+
+    sqlite3_bind_int(stmt, 1, pickupStopId);
+    sqlite3_bind_int(stmt, 2, destinationStopId);
+    sqlite3_bind_int(stmt, 3, seatsRequested);
+
+    int rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+
+    if (rc != SQLITE_DONE)
+    {
+        cout << "{\"ok\":false,\"error\":\"Could not save allocation request: "
+             << jsonEscape(sqlite3_errmsg(db)) << "\"}\n";
+        return false;
+    }
+
+    sqlite3_int64 requestId = sqlite3_last_insert_rowid(db);
+
+    cout << "{\"ok\":true,\"message\":\"Request added to FIFO queue\","
+         << "\"requestId\":" << requestId
+         << ",\"status\":\"PENDING\"}\n";
+
+    return true;
+}
+
+
+// Insert every currently eligible bus into the C Max Heap.
+// The caller owns and must destroy the returned Priority Queue.
+BusPriorityQueue* buildEligibleBusPriorityQueue(
+    sqlite3* db,
+    int pickupStopId,
+    int destinationStopId,
+    int seatsRequested
+)
+{
+    const char* countSql = "SELECT COUNT(*) FROM Buses;";
+    sqlite3_stmt* countStmt = nullptr;
+    int capacity = 1;
+
+    if (sqlite3_prepare_v2(db, countSql, -1, &countStmt, nullptr) == SQLITE_OK)
+    {
+        if (sqlite3_step(countStmt) == SQLITE_ROW)
+            capacity = sqlite3_column_int(countStmt, 0);
+
+        sqlite3_finalize(countStmt);
+    }
+
+    if (capacity < 1) capacity = 1;
+
+    BusPriorityQueue* busQueue = pq_create(capacity);
+    if (busQueue == nullptr) return nullptr;
+
+    const char* sql =
+        "SELECT B.bus_id, L.available_seats, MIN(P.stop_order) "
+        "FROM Buses B "
+        "JOIN Live_Status L ON L.bus_id = B.bus_id "
+        "JOIN Route_Checklist P ON P.bus_id = B.bus_id "
+        "JOIN Route_Checklist D ON D.bus_id = B.bus_id "
+        "WHERE P.stop_id = ? "
+        "AND D.stop_id = ? "
+        "AND P.stop_order < D.stop_order "
+        "AND L.available_seats >= ? "
+        "AND ("
+        "    L.current_stop_id IS NULL "
+        "    OR EXISTS ("
+        "        SELECT 1 FROM Route_Checklist C "
+        "        WHERE C.bus_id = B.bus_id "
+        "        AND C.stop_id = L.current_stop_id "
+        "        AND C.stop_order <= P.stop_order"
+        "    )"
+        ") "
+        "GROUP BY B.bus_id, L.available_seats;";
+
+    sqlite3_stmt* stmt = nullptr;
+
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        pq_destroy(busQueue);
+        return nullptr;
+    }
+
+    sqlite3_bind_int(stmt, 1, pickupStopId);
+    sqlite3_bind_int(stmt, 2, destinationStopId);
+    sqlite3_bind_int(stmt, 3, seatsRequested);
+
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+    {
+        BusCandidate candidate;
+        candidate.bus_id = sqlite3_column_int(stmt, 0);
+        candidate.available_seats = sqlite3_column_int(stmt, 1);
+        candidate.pickup_order = sqlite3_column_int(stmt, 2);
+
+        if (!pq_insert(busQueue, candidate))
+        {
+            sqlite3_finalize(stmt);
+            pq_destroy(busQueue);
+            return nullptr;
+        }
+    }
+
+    sqlite3_finalize(stmt);
+    return busQueue;
+}
+
+
+// Process one request. BEGIN IMMEDIATE prevents another writer from
+// reserving the same seats between candidate selection and seat update.
+bool allocateOneRequest(
+    sqlite3* db,
+    const AllocationRequest& request,
+    int& assignedBusId
+)
+{
+    assignedBusId = -1;
+
+    if (sqlite3_exec(db, "BEGIN IMMEDIATE;", nullptr, nullptr, nullptr) != SQLITE_OK)
+        return false;
+
+    BusPriorityQueue* busQueue = buildEligibleBusPriorityQueue(
+        db,
+        request.pickup_stop_id,
+        request.destination_stop_id,
+        request.seats_requested
+    );
+
+    if (busQueue == nullptr)
+    {
+        sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
+        return false;
+    }
+
+    BusCandidate candidate;
+    bool allocated = false;
+
+    while (pq_extract_max(busQueue, &candidate))
+    {
+        const char* updateSeatsSql =
+            "UPDATE Live_Status "
+            "SET available_seats = available_seats - ? "
+            "WHERE bus_id = ? AND available_seats >= ?;";
+
+        sqlite3_stmt* seatsStmt = nullptr;
+
+        if (sqlite3_prepare_v2(
+                db, updateSeatsSql, -1, &seatsStmt, nullptr
+            ) != SQLITE_OK)
+        {
+            pq_destroy(busQueue);
+            sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
+            return false;
+        }
+
+        sqlite3_bind_int(seatsStmt, 1, request.seats_requested);
+        sqlite3_bind_int(seatsStmt, 2, candidate.bus_id);
+        sqlite3_bind_int(seatsStmt, 3, request.seats_requested);
+
+        int updateRc = sqlite3_step(seatsStmt);
+        int changedRows = sqlite3_changes(db);
+        sqlite3_finalize(seatsStmt);
+
+        if (updateRc != SQLITE_DONE)
+        {
+            pq_destroy(busQueue);
+            sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
+            return false;
+        }
+
+        // A seat count may have changed since the candidate list was built.
+        // If so, try the next bus in priority order.
+        if (changedRows != 1)
+            continue;
+
+        const char* requestUpdateSql =
+            "UPDATE Allocation_Requests "
+            "SET status = 'ALLOCATED', assigned_bus_id = ?, "
+            "processed_at = CURRENT_TIMESTAMP "
+            "WHERE request_id = ? AND status = 'PENDING';";
+
+        sqlite3_stmt* requestStmt = nullptr;
+
+        if (sqlite3_prepare_v2(
+                db, requestUpdateSql, -1, &requestStmt, nullptr
+            ) != SQLITE_OK)
+        {
+            pq_destroy(busQueue);
+            sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
+            return false;
+        }
+
+        sqlite3_bind_int(requestStmt, 1, candidate.bus_id);
+        sqlite3_bind_int(requestStmt, 2, request.request_id);
+
+        int requestRc = sqlite3_step(requestStmt);
+        int requestChanges = sqlite3_changes(db);
+        sqlite3_finalize(requestStmt);
+
+        if (requestRc != SQLITE_DONE || requestChanges != 1)
+        {
+            pq_destroy(busQueue);
+            sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
+            return false;
+        }
+
+        assignedBusId = candidate.bus_id;
+        allocated = true;
+        break;
+    }
+
+    pq_destroy(busQueue);
+
+    if (sqlite3_exec(db, "COMMIT;", nullptr, nullptr, nullptr) != SQLITE_OK)
+    {
+        sqlite3_exec(db, "ROLLBACK;", nullptr, nullptr, nullptr);
+        return false;
+    }
+
+    // If no bus was eligible, the request remains PENDING for a later retry.
+    return allocated;
+}
+
+
+// Rebuild the in-memory C FIFO queue from persistent PENDING requests,
+// process them in request_id order, and return one JSON result per request.
+bool processPendingAllocationRequests(sqlite3* db)
+{
+    const char* pendingSql =
+        "SELECT request_id, pickup_stop_id, destination_stop_id, seats_requested "
+        "FROM Allocation_Requests "
+        "WHERE status = 'PENDING' "
+        "ORDER BY request_id ASC;";
+
+    sqlite3_stmt* pendingStmt = nullptr;
+
+    if (sqlite3_prepare_v2(db, pendingSql, -1, &pendingStmt, nullptr) != SQLITE_OK)
+    {
+        cout << "{\"ok\":false,\"error\":\"Could not read pending requests\"}\n";
+        return false;
+    }
+
+    // Take a stable snapshot of pending rows, then size the C queue exactly.
+    vector<AllocationRequest> pendingRequests;
+
+    while (sqlite3_step(pendingStmt) == SQLITE_ROW)
+    {
+        AllocationRequest request;
+        request.request_id = sqlite3_column_int(pendingStmt, 0);
+        request.pickup_stop_id = sqlite3_column_int(pendingStmt, 1);
+        request.destination_stop_id = sqlite3_column_int(pendingStmt, 2);
+        request.seats_requested = sqlite3_column_int(pendingStmt, 3);
+        pendingRequests.push_back(request);
+    }
+
+    sqlite3_finalize(pendingStmt);
+
+    int queueCapacity = pendingRequests.empty()
+        ? 1
+        : static_cast<int>(pendingRequests.size());
+
+    RequestQueue* requestQueue = queue_create(queueCapacity);
+
+    if (requestQueue == nullptr)
+    {
+        cout << "{\"ok\":false,\"error\":\"Could not create request queue\"}\n";
+        return false;
+    }
+
+    for (const AllocationRequest& request : pendingRequests)
+    {
+        if (!queue_enqueue(requestQueue, request))
+        {
+            queue_destroy(requestQueue);
+            cout << "{\"ok\":false,\"error\":\"Could not enqueue pending request\"}\n";
+            return false;
+        }
+    }
+
+    cout << "{\"ok\":true,\"processed\":[";
+
+    bool firstResult = true;
+    AllocationRequest request;
+
+    while (queue_dequeue(requestQueue, &request))
+    {
+        int assignedBusId = -1;
+        bool allocated = allocateOneRequest(db, request, assignedBusId);
+
+        if (!firstResult) cout << ",";
+        firstResult = false;
+
+        cout << "{"
+             << "\"requestId\":" << request.request_id << ","
+             << "\"status\":\"" << (allocated ? "ALLOCATED" : "PENDING") << "\","
+             << "\"assignedBusId\":";
+
+        if (allocated)
+            cout << assignedBusId;
+        else
+            cout << "null";
+
+        cout << "}";
+
+        // Strict FIFO: if the oldest request cannot be allocated now,
+        // leave it pending and do not let later requests jump ahead.
+        if (!allocated)
+            break;
+    }
+
+    cout << "]}\n";
+    queue_destroy(requestQueue);
+
+    return true;
+}
+
+
 // =========================================================
 // MAIN
 // =========================================================
@@ -1248,6 +1677,11 @@ int main(
 
         sqlite3* db =
             dbHandler.getHandle();
+
+        // Create the allocation-request table if it does not exist.
+        // Existing tables and CSV data are not modified.
+        if (!ensureAllocationRequestTable(db))
+            return 1;
 
 
         // -------------------------------------------------
@@ -1420,6 +1854,47 @@ else if (command == "end_trip")
         ? 0
         : 1;
 }
+
+
+        // -------------------------------------------------
+        // SUBMIT STUDENT ALLOCATION REQUEST
+        // Usage: transit_engine.exe submit_request <pickup_stop_id> <destination_stop_id> <seats>
+        // -------------------------------------------------
+
+        else if (command == "submit_request")
+        {
+            if (argc < 5)
+            {
+                cout << "{\"ok\":false,\"error\":\"Usage: submit_request <pickup_stop_id> <destination_stop_id> <seats>\"}\n";
+                return 1;
+            }
+
+            try
+            {
+                int pickupStopId = stoi(argv[2]);
+                int destinationStopId = stoi(argv[3]);
+                int seatsRequested = stoi(argv[4]);
+
+                return submitAllocationRequest(
+                    db, pickupStopId, destinationStopId, seatsRequested
+                ) ? 0 : 1;
+            }
+            catch (...)
+            {
+                cout << "{\"ok\":false,\"error\":\"Invalid numeric request parameter\"}\n";
+                return 1;
+            }
+        }
+
+        // -------------------------------------------------
+        // PROCESS PENDING REQUESTS USING C FIFO QUEUE + C MAX HEAP
+        // Usage: transit_engine.exe process_requests
+        // -------------------------------------------------
+
+        else if (command == "process_requests")
+        {
+            return processPendingAllocationRequests(db) ? 0 : 1;
+        }
 
 
         // -------------------------------------------------
