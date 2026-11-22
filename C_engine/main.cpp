@@ -25,122 +25,77 @@ extern "C"
 
 using namespace std;
 
-
 // =========================================================
 // Convert SQLite text safely to std::string
 // =========================================================
+string getText(sqlite3_stmt* stmt, int column){
+    const unsigned char* text = sqlite3_column_text(stmt, column);
 
-string getText(sqlite3_stmt* stmt, int column)
-{
-    const unsigned char* text =
-        sqlite3_column_text(stmt, column);
-
-    if (text == nullptr)
-    {
+    if (text == nullptr){
         return "";
     }
 
     return reinterpret_cast<const char*>(text);
 }
 
-
 // =========================================================
 // Escape string for JSON
 // IT IS IMPORTANT TO ESCAPE STRINGS FOR JSON TO AVOID SYNTAX ERRORS AND SECURITY ISSUES.
 // =========================================================
-
-string jsonEscape(const string& input)
-{
+string jsonEscape(const string& input){
     string output;
 
-    for (char c : input)
-    {
-        switch (c)
-        {
+    for (char c : input){
+        switch (c){
             case '"':
                 output += "\\\"";
                 break;
-
             case '\\':
                 output += "\\\\";
                 break;
-
             case '\n':
                 output += "\\n";
                 break;
-
             case '\r':
                 output += "\\r";
                 break;
-
             case '\t':
                 output += "\\t";
                 break;
-
             default:
                 output += c;
         }
     }
-
     return output;
 }
-
 
 // =========================================================
 // Find bus_id using BUS NUMBER ONLY 
 // =========================================================
-
-int findBusId(sqlite3* db, const string& busNo)
-{
+int findBusId(sqlite3* db, const string& busNo){
     const char* sql =
         "SELECT bus_id "
         "FROM Buses "
         "WHERE bus_number = ? "
         "LIMIT 1;";
-
     sqlite3_stmt* stmt = nullptr;
-
-    if (sqlite3_prepare_v2(
-            db,
-            sql,
-            -1,
-            &stmt,
-            nullptr
-        ) != SQLITE_OK)
-    {
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK){
         return -1;
     }
-
-    sqlite3_bind_text(
-        stmt,
-        1,
-        busNo.c_str(),
-        -1,
-        SQLITE_TRANSIENT
-    );
-
+    sqlite3_bind_text(stmt, 1, busNo.c_str(), -1, SQLITE_TRANSIENT);
     int busId = -1;
-
-    if (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        busId =
-            sqlite3_column_int(stmt, 0);
+    if (sqlite3_step(stmt) == SQLITE_ROW){
+        busId = sqlite3_column_int(stmt, 0);
     }
-
     sqlite3_finalize(stmt);
-
     return busId;
 }
-
 
 // =========================================================
 // GET ALL BUSES
 // =========================================================
-
 bool getBusRoute(sqlite3* db, int busId);
-
-bool getAllBuses(sqlite3* db)
-{
+bool getAllBuses(sqlite3* db){
     const char* sql =
         "SELECT "
         "B.bus_id, "
@@ -159,22 +114,15 @@ bool getAllBuses(sqlite3* db)
         "LEFT JOIN Live_Status L "
         "ON B.bus_id = L.bus_id "
         "ORDER BY B.bus_id;";
-
     sqlite3_stmt* stmt = nullptr;
-
-    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK)
-    {
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK){
         cout << "{\"ok\":false,"
              << "\"error\":\"Failed to prepare get_all_buses query\"}\n";
         return false;
     }
-
     cout << "[";
-
     bool first = true;
-
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
+    while (sqlite3_step(stmt) == SQLITE_ROW){
         int busId = sqlite3_column_int(stmt, 0);
         string busNo = getText(stmt, 1);
         string registrationNo = getText(stmt, 2);
@@ -187,24 +135,18 @@ bool getAllBuses(sqlite3* db)
         string parkingZone = getText(stmt, 9);
 
         int availableSeats = 0;
-        if (sqlite3_column_type(stmt, 10) != SQLITE_NULL)
-        {
+        if (sqlite3_column_type(stmt, 10) != SQLITE_NULL){
             availableSeats = sqlite3_column_int(stmt, 10);
         }
 
         int currentStopId = -1;
-        if (sqlite3_column_type(stmt, 11) != SQLITE_NULL)
-        {
+        if (sqlite3_column_type(stmt, 11) != SQLITE_NULL){
             currentStopId = sqlite3_column_int(stmt, 11);
         }
-
-        if (!first)
-        {
+        if (!first){
             cout << ",";
         }
-
         first = false;
-
         cout << "{"
              << "\"busId\":" << busId << ","
              << "\"busNo\":\"" << jsonEscape(busNo) << "\","
@@ -220,17 +162,12 @@ bool getAllBuses(sqlite3* db)
              << "\"availableSeats\":" << availableSeats << ","
              << "\"totalSeats\":" << totalCapacity << ","
              << "\"currentStopId\":" << currentStopId << ",";
-
-        if (!getBusRoute(db, busId))
-        {
+        if (!getBusRoute(db, busId)){
             cout << "\"route\":[]";
         }
-
         cout << "}";
     }
-
     cout << "]\n";
-
     sqlite3_finalize(stmt);
     return true;
 }
@@ -238,9 +175,7 @@ bool getAllBuses(sqlite3* db)
 // =========================================================
 // GET ROUTE FOR A BUS
 // =========================================================
-
-bool getBusRoute(sqlite3* db, int busId)
-{
+bool getBusRoute(sqlite3* db, int busId){
     const char* sql =
         "SELECT "
         "R.stop_id, "
@@ -253,46 +188,20 @@ bool getBusRoute(sqlite3* db, int busId)
         "ORDER BY R.stop_order;";
 
     sqlite3_stmt* stmt = nullptr;
-
-    if (sqlite3_prepare_v2(
-            db,
-            sql,
-            -1,
-            &stmt,
-            nullptr
-        ) != SQLITE_OK)
-    {
+    if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK){
         return false;
     }
-
-    sqlite3_bind_int(
-        stmt,
-        1,
-        busId
-    );
-
+    sqlite3_bind_int( stmt, 1, busId);
     cout << "\"route\":[";
-
     bool first = true;
-
-    while (sqlite3_step(stmt) == SQLITE_ROW)
-    {
-        int stopId =
-            sqlite3_column_int(stmt, 0);
-
-        string stopName =
-            getText(stmt, 1);
-
-        int stopOrder =
-            sqlite3_column_int(stmt, 2);
-
-        if (!first)
-        {
+    while (sqlite3_step(stmt) == SQLITE_ROW){
+        int stopId = sqlite3_column_int(stmt, 0);
+        string stopName = getText(stmt, 1);
+        int stopOrder = sqlite3_column_int(stmt, 2);
+        if (!first){
             cout << ",";
         }
-
         first = false;
-
         cout
             << "{"
             << "\"stopId\":"
@@ -308,24 +217,15 @@ bool getBusRoute(sqlite3* db, int busId)
 
             << "}";
     }
-
     cout << "]";
-
     sqlite3_finalize(stmt);
-
     return true;
 }
-
 
 // =========================================================
 // GET SINGLE BUS
 // =========================================================
-
-bool getBus(
-    sqlite3* db,
-    const string& busNo
-)
-{
+bool getBus(sqlite3* db, const string& busNo){
     const char* sql =
         "SELECT "
         "B.bus_id, "
@@ -345,9 +245,7 @@ bool getBus(
         "ON B.bus_id = L.bus_id "
         "WHERE B.bus_number = ? "
         "LIMIT 1;";
-
-    sqlite3_stmt* stmt = nullptr;
-
+sqlite3_stmt* stmt = nullptr;
     if (sqlite3_prepare_v2(
             db,
             sql,
